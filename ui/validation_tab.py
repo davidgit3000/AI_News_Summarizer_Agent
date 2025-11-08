@@ -114,14 +114,14 @@ def render_validation_tab():
                         
                         if fidelity.get('explanation'):
                             with st.expander("📝 Detailed Explanation"):
-                                # Use text to avoid markdown/LaTeX rendering
-                                st.text(fidelity['explanation'])
+                                # Use write with text wrapping
+                                st.write(fidelity['explanation'])
                         
                         if fidelity.get('issues_found'):
                             st.warning("⚠️ Issues Found:")
-                            # Use code block to avoid markdown/LaTeX rendering issues
-                            issues_text = "\n".join([f"• {issue}" for issue in fidelity['issues_found']])
-                            st.text(issues_text)
+                            # Display issues as bullet points
+                            for issue in fidelity['issues_found']:
+                                st.write(f"• {issue}")
                     
                     # Display source articles for reference
                     if result.get('sources'):
