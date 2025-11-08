@@ -6,8 +6,7 @@ Handles API requests, pagination, and error handling.
 import logging
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
-from newsapi import NewsApiClient
-from newsapi.newsapi_exception import NewsAPIException
+import requests
 
 from config import get_settings
 
@@ -34,7 +33,7 @@ class NewsFetcher:
                 "NewsAPI key not found. Please set NEWSAPI_KEY in your .env file"
             )
         
-        self.client = NewsApiClient(api_key=self.api_key)
+        self.base_url = "https://newsapi.org/v2"
         self.language = settings.news_api_language
         self.page_size = settings.news_api_page_size
         self.sources = settings.news_api_sources
@@ -85,15 +84,28 @@ class NewsFetcher:
                 params.pop('category', None)
             
             logger.info(f"Fetching top headlines with params: {params}")
-            response = self.client.get_top_headlines(**params)
             
-            articles = response.get('articles', [])
+            # Make API request
+            headers = {'X-Api-Key': self.api_key}
+            response = requests.get(
+                f"{self.base_url}/top-headlines",
+                params=params,
+                headers=headers,
+                timeout=30
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if data.get('status') != 'ok':
+                raise Exception(f"NewsAPI error: {data.get('message', 'Unknown error')}")
+            
+            articles = data.get('articles', [])
             logger.info(f"Successfully fetched {len(articles)} articles")
             
             return self._process_articles(articles)
             
-        except NewsAPIException as e:
-            logger.error(f"NewsAPI error: {e}")
+        except requests.RequestException as e:
+            logger.error(f"NewsAPI request error: {e}")
             raise
         except Exception as e:
             logger.error(f"Unexpected error fetching headlines: {e}")
@@ -146,15 +158,28 @@ class NewsFetcher:
             params = {k: v for k, v in params.items() if v is not None}
             
             logger.info(f"Searching articles with params: {params}")
-            response = self.client.get_everything(**params)
             
-            articles = response.get('articles', [])
+            # Make API request
+            headers = {'X-Api-Key': self.api_key}
+            response = requests.get(
+                f"{self.base_url}/everything",
+                params=params,
+                headers=headers,
+                timeout=30
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if data.get('status') != 'ok':
+                raise Exception(f"NewsAPI error: {data.get('message', 'Unknown error')}")
+            
+            articles = data.get('articles', [])
             logger.info(f"Successfully fetched {len(articles)} articles")
             
             return self._process_articles(articles)
             
-        except NewsAPIException as e:
-            logger.error(f"NewsAPI error: {e}")
+        except requests.RequestException as e:
+            logger.error(f"NewsAPI request error: {e}")
             raise
         except Exception as e:
             logger.error(f"Unexpected error searching articles: {e}")
@@ -237,13 +262,25 @@ class NewsFetcher:
             }
             params = {k: v for k, v in params.items() if v is not None}
             
-            response = self.client.get_sources(**params)
-            sources = response.get('sources', [])
+            # Make API request
+            headers = {'X-Api-Key': self.api_key}
+            response = requests.get(
+                f"{self.base_url}/sources",
+                params=params,
+                headers=headers,
+                timeout=30
+            )
+            response.raise_for_status()
+            data = response.json()
             
+            if data.get('status') != 'ok':
+                raise Exception(f"NewsAPI error: {data.get('message', 'Unknown error')}")
+            
+            sources = data.get('sources', [])
             logger.info(f"Found {len(sources)} sources")
             return sources
             
-        except NewsAPIException as e:
+        except requests.RequestException as e:
             logger.error(f"Error fetching sources: {e}")
             raise
 

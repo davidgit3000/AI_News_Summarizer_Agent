@@ -16,8 +16,7 @@ psycopg2-binary==2.9.10
 sqlalchemy==2.0.36
 
 # News API
-requests==2.31.0
-newsapi-python==0.2.7
+requests==2.32.3
 
 # Data Processing
 pandas==2.2.3
