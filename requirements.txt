@@ -31,7 +31,3 @@ nltk==3.9.1
 pydantic==2.10.2
 pydantic-settings==2.6.1
 python-dateutil==2.9.0.post0
-
-# LangChain (if needed)
-langchain==0.3.7
-langchain-openai==0.2.8
