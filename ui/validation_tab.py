@@ -78,20 +78,44 @@ def render_validation_tab():
                         
                         # Overall score
                         col1, col2, col3 = st.columns(3)
-                        col1.metric("Overall Quality", quality['overall'].upper())
-                        col2.metric("Score", f"{quality['score']:.0f}/100")
-                        col3.metric("Compression", f"{validation_result['metrics']['compression_ratio']:.1%}")
+                        col1.metric(
+                            "Overall Quality", 
+                            quality['overall'].upper(),
+                            help="Overall assessment of summary quality based on all metrics"
+                        )
+                        col2.metric(
+                            "Score", 
+                            f"{quality['score']:.0f}/100",
+                            help="Composite quality score (0-100) based on readability, diversity, and density"
+                        )
+                        col3.metric(
+                            "Compression", 
+                            f"{validation_result['metrics']['compression_ratio']:.1%}",
+                            help="Ratio of summary length to original content length (lower = more concise)"
+                        )
                         
                         # Detailed metrics
                         st.markdown("---")
                         col1, col2, col3 = st.columns(3)
                         
                         with col1:
-                            st.metric("Readability", f"{validation_result['metrics']['readability']['flesch_reading_ease']:.1f}")
+                            st.metric(
+                                "Readability", 
+                                f"{validation_result['metrics']['readability']['flesch_reading_ease']:.1f}",
+                                help="Flesch Reading Ease score (0-100). Higher = easier to read. 60-70 is ideal for general audience."
+                            )
                         with col2:
-                            st.metric("Lexical Diversity", f"{validation_result['metrics']['lexical_diversity']:.1%}")
+                            st.metric(
+                                "Lexical Diversity", 
+                                f"{validation_result['metrics']['lexical_diversity']:.1%}",
+                                help="Ratio of unique words to total words. Higher = more varied vocabulary."
+                            )
                         with col3:
-                            st.metric("Information Density", f"{validation_result['metrics']['information_density']:.1%}")
+                            st.metric(
+                                "Information Density", 
+                                f"{validation_result['metrics']['information_density']:.1%}",
+                                help="Ratio of important words (nouns, verbs, adjectives) to total words. Higher = more informative."
+                            )
                         
                         # Recommendations
                         if quality['recommendations']:
@@ -108,9 +132,21 @@ def render_validation_tab():
                         fidelity = validation_result['fidelity']
                         
                         col1, col2, col3 = st.columns(3)
-                        col1.metric("Overall Fidelity", f"{fidelity.get('overall_fidelity', 0):.2f}")
-                        col2.metric("Factual Consistency", f"{fidelity.get('factual_consistency', 0):.2f}")
-                        col3.metric("Hallucination-Free", f"{fidelity.get('hallucination_free', 0):.2f}")
+                        col1.metric(
+                            "Overall Fidelity", 
+                            f"{fidelity.get('overall_fidelity', 0):.2f}",
+                            help="Overall measure of how faithful the summary is to the source articles (0-1). Higher = more accurate."
+                        )
+                        col2.metric(
+                            "Factual Consistency", 
+                            f"{fidelity.get('factual_consistency', 0):.2f}",
+                            help="Measures if claims in summary are supported by source articles (0-1). 1.0 = all facts verified."
+                        )
+                        col3.metric(
+                            "Hallucination-Free", 
+                            f"{fidelity.get('hallucination_free', 0):.2f}",
+                            help="Measures absence of fabricated information (0-1). 1.0 = no hallucinations detected."
+                        )
                         
                         if fidelity.get('explanation'):
                             with st.expander("📝 Detailed Explanation"):
