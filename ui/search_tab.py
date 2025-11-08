@@ -56,7 +56,7 @@ def render_search_tab():
                         results = st.session_state.retrieval_pipeline.retrieve_for_query(
                             query=search_query,
                             top_k=max_results,
-                            min_similarity=0.3  # Filter out low-relevance results
+                            min_similarity=0.15  # Lower threshold for short queries like "ai"
                         )
                         
                         # Convert to article format
@@ -95,7 +95,14 @@ def render_search_tab():
                 relevance_pct = article['similarity'] * 100
                 title_suffix = f" (Relevance: {relevance_pct:.1f}%)"
             
-            with st.expander(f"**{idx}. {article['title']}**{title_suffix}", expanded=False):
+            # Use HTML to display title without markdown interpretation
+            title = article['title']
+            
+            # Create expander - use HTML entity encoding to prevent markdown
+            # Replace $ with HTML entity to prevent markdown issues
+            safe_title = title.replace('$', '\\$')
+            
+            with st.expander(f"{idx}. {safe_title}{title_suffix}", expanded=False):
                 col1, col2 = st.columns([3, 1])
                 
                 with col1:

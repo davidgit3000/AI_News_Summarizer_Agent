@@ -151,7 +151,13 @@ class PineconeStore:
                 'metadata': metadata
             })
         
-        logger.info(f"Found {len(matches)} matches (min_similarity={min_similarity})")
+        # Log similarity scores for debugging
+        if matches:
+            sample_scores = [f"{m['id']}:{m['similarity']:.3f}" for m in matches[:3]]
+            logger.info(f"Found {len(matches)} matches (min_similarity={min_similarity}), sample scores: {sample_scores}")
+        else:
+            logger.info(f"Found 0 matches (min_similarity={min_similarity})")
+        
         return matches
     
     def delete_by_ids(self, ids: List[str]) -> None:
@@ -203,3 +209,21 @@ class PineconeStore:
             min_similarity=0.0,
             filter_dict=filter_dict
         )
+    
+    def clear_index(self):
+        """Clear all vectors from the Pinecone index."""
+        try:
+            # Delete all vectors by deleting all IDs
+            stats = self.index.describe_index_stats()
+            total_vectors = stats.get('total_vector_count', 0)
+            
+            if total_vectors > 0:
+                # Delete all vectors in the default namespace
+                self.index.delete(delete_all=True)
+                logger.info(f"Cleared {total_vectors} vectors from Pinecone index")
+            else:
+                logger.info("Pinecone index is already empty")
+                
+        except Exception as e:
+            logger.error(f"Error clearing Pinecone index: {e}")
+            raise

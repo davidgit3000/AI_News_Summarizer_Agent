@@ -221,7 +221,13 @@ class RetrievalPipeline:
             if r['similarity'] >= min_similarity
         ]
         
-        logger.info(f"Retrieved {len(filtered_results)} articles for query: '{query[:50]}...'")
+        # Log IDs for debugging
+        if filtered_results:
+            ids = [r['id'] for r in filtered_results[:5]]  # First 5 IDs
+            logger.info(f"Retrieved {len(filtered_results)} articles for query: '{query[:50]}...', sample IDs: {ids}")
+        else:
+            logger.info(f"Retrieved 0 articles for query: '{query[:50]}...'")
+        
         return filtered_results
     
     def retrieve_context_for_summarization(

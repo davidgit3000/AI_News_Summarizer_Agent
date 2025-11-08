@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import numpy as np
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, LargeBinary, Float
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, LargeBinary, Float, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import NullPool
@@ -334,5 +334,34 @@ class PostgresManager:
                 }
                 for a in articles
             ]
+        finally:
+            session.close()
+    
+    def clear_all_articles(self) -> int:
+        """
+        Delete all articles from the database and reset ID sequence to 1.
+        
+        Returns:
+            Number of articles deleted
+        """
+        session = self.get_session()
+        
+        try:
+            count = session.query(Article).count()
+            
+            # Delete all articles
+            session.query(Article).delete()
+            
+            # Reset the auto-increment sequence to start from 1
+            # This ensures new articles will have IDs starting from 1
+            session.execute(text("ALTER SEQUENCE articles_id_seq RESTART WITH 1"))
+            
+            session.commit()
+            logger.info(f"Deleted {count} articles and reset ID sequence to 1")
+            return count
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error clearing articles: {e}")
+            raise
         finally:
             session.close()

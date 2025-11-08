@@ -223,7 +223,10 @@ def render_analytics_tab():
         
         if trending_articles:
             for idx, (title, source, published_at, url, description) in enumerate(trending_articles, 1):
-                with st.expander(f"**{idx}. {title}**", expanded=(idx == 1)):
+                # Escape $ to prevent markdown interpretation
+                safe_title = title.replace('$', '\\$')
+                
+                with st.expander(f"{idx}. {safe_title}", expanded=(idx == 1)):
                     col1, col2 = st.columns([3, 1])
                     
                     with col1:
@@ -244,6 +247,71 @@ def render_analytics_tab():
                             st.markdown(f"[🔗 Read More]({url})")
         else:
             st.info("No articles available yet. Start by ingesting some articles!")
+        
+        st.markdown("---")
+        
+        # Danger Zone - Clear All Data
+        st.subheader("⚠️ Danger Zone")
+        
+        with st.expander("🗑️ Clear All Data", expanded=False):
+            st.warning("**WARNING**: This will permanently delete ALL data from both Neon PostgreSQL and Pinecone!")
+            
+            st.write("This action will:")
+            st.write("- 🗄️ Delete all articles from Neon PostgreSQL")
+            st.write("- 🔍 Delete all vectors from Pinecone")
+            st.write("- 📊 Reset all statistics")
+            
+            st.error("⚠️ **This action cannot be undone!**")
+            
+            # Safety confirmation
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                confirmation = st.text_input(
+                    "Type 'DELETE ALL DATA' to confirm:",
+                    key="clear_data_confirmation",
+                    placeholder="DELETE ALL DATA"
+                )
+            
+            with col2:
+                if st.button("🗑️ Clear All Data", type="secondary", disabled=(confirmation != "DELETE ALL DATA")):
+                    with st.spinner("Clearing all data..."):
+                        try:
+                            from src.database.db_factory import get_database_manager
+                            from src.retrieval.pipeline import RetrievalPipeline
+                            from config import get_settings
+                            
+                            settings = get_settings()
+                            
+                            # Clear PostgreSQL
+                            db = get_database_manager()
+                            if hasattr(db, 'clear_all_articles'):
+                                deleted_count = db.clear_all_articles()
+                                st.success(f"✅ Deleted {deleted_count} articles from Neon PostgreSQL")
+                            
+                            # Clear vector store
+                            retrieval = RetrievalPipeline()
+                            
+                            if settings.vector_store_type == "pinecone":
+                                # Clear Pinecone
+                                if hasattr(retrieval.vector_store, 'clear_index'):
+                                    retrieval.vector_store.clear_index()
+                                    st.success("✅ Cleared all vectors from Pinecone")
+                            else:
+                                # Clear ChromaDB
+                                if hasattr(retrieval.vector_store, 'clear_collection'):
+                                    retrieval.vector_store.clear_collection()
+                                    st.success("✅ Cleared all vectors from ChromaDB")
+                            
+                            # Clear cache
+                            st.cache_data.clear()
+                            
+                            st.balloons()
+                            st.success("🎉 All data cleared successfully!")
+                            st.info("Refresh the page to see updated statistics.")
+                            
+                        except Exception as e:
+                            st.error(f"❌ Error clearing data: {str(e)}")
         
     except Exception as e:
         st.error(f"❌ Error loading analytics: {str(e)}")
