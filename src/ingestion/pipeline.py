@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
 
 from src.ingestion.news_fetcher import NewsFetcher
-from src.database.db_manager import DatabaseManager
+from src.database.db_factory import get_database_manager
 from config import get_settings
 
 # Configure logging
@@ -32,7 +32,7 @@ class IngestionPipeline:
             db_path: Database path (optional, uses config if not provided)
         """
         self.fetcher = NewsFetcher(api_key=news_api_key)
-        self.db = DatabaseManager(db_path=db_path)
+        self.db = get_database_manager()
         self.settings = get_settings()
         
         logger.info("IngestionPipeline initialized successfully")

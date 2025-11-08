@@ -14,6 +14,9 @@ from config import get_settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global cache for model to avoid reloading
+_MODEL_CACHE = {}
+
 
 class TextEmbedder:
     """Generates embeddings for text using Sentence Transformers."""
@@ -29,12 +32,19 @@ class TextEmbedder:
         settings = get_settings()
         self.model_name = model_name or settings.embedding_model
         
-        logger.info(f"Loading embedding model: {self.model_name}")
-        self.model = SentenceTransformer(self.model_name)
+        # Use cached model if available
+        if self.model_name in _MODEL_CACHE:
+            logger.info(f"Using cached embedding model: {self.model_name}")
+            self.model = _MODEL_CACHE[self.model_name]
+        else:
+            logger.info(f"Loading embedding model: {self.model_name}")
+            self.model = SentenceTransformer(self.model_name)
+            _MODEL_CACHE[self.model_name] = self.model
         
         # Get embedding dimension
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
-        logger.info(f"Model loaded. Embedding dimension: {self.embedding_dim}")
+        if self.model_name not in _MODEL_CACHE or len(_MODEL_CACHE) == 1:
+            logger.info(f"Model loaded. Embedding dimension: {self.embedding_dim}")
     
     def embed_text(self, text: str) -> np.ndarray:
         """

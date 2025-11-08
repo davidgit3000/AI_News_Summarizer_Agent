@@ -22,7 +22,7 @@ class VectorStore:
     
     def __init__(
         self,
-        collection_name: str = "news_articles",
+        collection_name: str = "news-summarizer",
         persist_directory: Optional[str] = None,
         embedding_model: Optional[str] = None
     ):

@@ -5,7 +5,61 @@ Analytics tab component for displaying insights and trends.
 import streamlit as st
 from datetime import datetime, timedelta
 from collections import Counter
-from src.database.db_manager import DatabaseManager
+from src.database.db_factory import get_database_manager
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def get_analytics_stats():
+    """Get analytics stats with caching (60 second TTL)."""
+    db = get_database_manager()
+    return db.get_stats()
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def get_recent_activity_counts():
+    """Get recent activity counts with caching (60 second TTL)."""
+    from src.database.postgres_manager import Article
+    db = get_database_manager()
+    session = db.get_session()
+    
+    try:
+        now = datetime.now()
+        periods = {
+            "Last 24 Hours": now - timedelta(days=1),
+            "Last 7 Days": now - timedelta(days=7),
+            "Last 30 Days": now - timedelta(days=30)
+        }
+        
+        counts = {}
+        for period_name, start_date in periods.items():
+            count = session.query(Article).filter(
+                Article.published_at >= start_date
+            ).count()
+            counts[period_name] = count
+        
+        return counts
+    finally:
+        session.close()
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def get_trending_articles():
+    """Get trending articles with caching (60 second TTL)."""
+    from src.database.postgres_manager import Article
+    db = get_database_manager()
+    session = db.get_session()
+    
+    try:
+        articles = session.query(Article).order_by(
+            Article.published_at.desc()
+        ).limit(5).all()
+        
+        return [
+            (a.title, a.source, a.published_at.isoformat() if a.published_at else None, a.url, a.description)
+            for a in articles
+        ]
+    finally:
+        session.close()
 
 
 def render_analytics_tab():
@@ -14,8 +68,8 @@ def render_analytics_tab():
     st.write("Real-time analytics from your news database")
     
     try:
-        db = DatabaseManager()
-        stats = db.get_stats()
+        with st.spinner("📊 Loading analytics data..."):
+            stats = get_analytics_stats()
         
         # Overview metrics
         st.subheader("📈 Overview")
@@ -99,42 +153,24 @@ def render_analytics_tab():
         # Recent activity
         st.subheader("🕒 Recent Activity")
         
-        # Use direct SQL query through the database manager's connection
-        import sqlite3
-        conn = sqlite3.connect(db.db_path)
-        cursor = conn.cursor()
-        
-        # Count articles by time period
-        now = datetime.now()
-        periods = {
-            "Last 24 Hours": now - timedelta(days=1),
-            "Last 7 Days": now - timedelta(days=7),
-            "Last 30 Days": now - timedelta(days=30)
-        }
-        
-        col1, col2, col3 = st.columns(3)
-        
-        tooltips = {
-            "Last 24 Hours": "Number of articles published in the last 24 hours",
-            "Last 7 Days": "Number of articles published in the last 7 days",
-            "Last 30 Days": "Number of articles published in the last 30 days"
-        }
-        
-        for idx, (period_name, start_date) in enumerate(periods.items()):
-            cursor.execute("""
-                SELECT COUNT(*) FROM articles 
-                WHERE published_at >= ?
-            """, (start_date.isoformat(),))
-            count = cursor.fetchone()[0]
+        with st.spinner("📅 Analyzing recent activity..."):
+            counts = get_recent_activity_counts()
             
-            if idx == 0:
-                col1.metric(period_name, count, help=tooltips[period_name])
-            elif idx == 1:
-                col2.metric(period_name, count, help=tooltips[period_name])
-            else:
-                col3.metric(period_name, count, help=tooltips[period_name])
-        
-        conn.close()
+            col1, col2, col3 = st.columns(3)
+            
+            tooltips = {
+                "Last 24 Hours": "Number of articles published in the last 24 hours",
+                "Last 7 Days": "Number of articles published in the last 7 days",
+                "Last 30 Days": "Number of articles published in the last 30 days"
+            }
+            
+            for idx, (period_name, count) in enumerate(counts.items()):
+                if idx == 0:
+                    col1.metric(period_name, count, help=tooltips[period_name])
+                elif idx == 1:
+                    col2.metric(period_name, count, help=tooltips[period_name])
+                else:
+                    col3.metric(period_name, count, help=tooltips[period_name])
         
         st.markdown("---")
         
@@ -182,18 +218,8 @@ def render_analytics_tab():
         # Top 5 Trending Articles (most recent)
         st.subheader("🔥 Top 5 Trending Articles")
         
-        conn = sqlite3.connect(db.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT title, source, published_at, url, description
-            FROM articles
-            ORDER BY published_at DESC
-            LIMIT 5
-        """)
-        
-        trending_articles = cursor.fetchall()
-        conn.close()
+        with st.spinner("🔥 Loading trending articles..."):
+            trending_articles = get_trending_articles()
         
         if trending_articles:
             for idx, (title, source, published_at, url, description) in enumerate(trending_articles, 1):

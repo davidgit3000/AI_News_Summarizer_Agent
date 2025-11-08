@@ -105,22 +105,23 @@ def render_ingestion_tab():
                     
                     st.success(f"✅ Step 2/3: Vectorized {vectorize_result['successful']} articles")
                     
-                    # Step 3: Sync to ChromaDB
-                    with st.spinner("🔄 Step 3/3: Syncing to ChromaDB..."):
+                    # Step 3: Sync to Pinecone
+                    with st.spinner("🔄 Step 3/3: Syncing to Pinecone..."):
                         if st.session_state.retrieval_pipeline is None:
                             st.session_state.retrieval_pipeline = RetrievalPipeline()
                         
                         sync_result = st.session_state.retrieval_pipeline.sync_database_to_vector_store()
                         st.session_state.last_sync_stats = sync_result
                     
-                    st.success(f"✅ Step 3/3: Synced {sync_result['synced']} articles to ChromaDB")
+                    st.success(f"✅ Step 3/3: Synced {sync_result['synced']} articles to Pinecone")
                     
                     # Final success message
                     st.balloons()
                     st.success("🎉 All done! Articles are ready for summarization.")
                     
-                    # Rerun to update sidebar
-                    st.rerun()
+                    # Clear cache to update sidebar count on next page interaction
+                    # (avoids immediate rerun which causes UI flicker)
+                    st.cache_data.clear()
                 else:
                     st.info("ℹ️ No new articles to process (all were duplicates)")
                 

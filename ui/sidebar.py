@@ -3,7 +3,7 @@ Sidebar component for the AI News Summarizer application.
 """
 
 import streamlit as st
-from src.database.db_manager import DatabaseManager
+from src.database.db_factory import get_database_manager
 from config import get_settings
 
 
@@ -20,21 +20,33 @@ def check_api_keys():
     return keys_status
 
 
+# @st.cache_data(ttl=2000, show_spinner=False)  # Cache for 60 seconds, hide default spinner
+# def get_article_count():
+#     """Get article count from database with caching."""
+#     try:
+#         db = get_database_manager()
+#         stats = db.get_stats()
+#         return stats['total_articles'], None
+#     except Exception as e:
+#         return 0, str(e)
+
+
 def render_sidebar():
     st.sidebar.title("⚙️ Configuration")
     
     # Statistics - Get actual count from database
-    st.sidebar.subheader("📊 Statistics")
-    try:
-        from src.database.db_manager import DatabaseManager
-        db = DatabaseManager()
-        stats = db.get_stats()
-        article_count = stats['total_articles']
-    except:
-        article_count = 0
-    st.sidebar.metric("Articles Ingested", article_count)
-
-    st.sidebar.markdown("---")
+    # st.sidebar.subheader("📊 Statistics")
+    
+    # # Show loading message
+    # with st.sidebar:
+    #     with st.spinner("🔄 Connecting to database..."):
+    #         article_count, error = get_article_count()
+    
+    # if error:
+    #     st.sidebar.error(f"Database error: {error}")
+    #     st.sidebar.metric("Articles Ingested", 0)
+    # else:
+    #     st.sidebar.metric("Articles Ingested", article_count)
     
     # API Keys Status
     st.sidebar.subheader("API Keys Status")

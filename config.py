@@ -37,9 +37,11 @@ class Settings(BaseSettings):
     embedding_model: str = "all-MiniLM-L6-v2"
     
     # Vector Store Configuration
-    vector_store_type: str = "chromadb"
-    vector_store_path: str = "./chroma_db"
-    
+    vector_store_type: str = "pinecone" # "chromadb" or "pinecone"
+    vector_store_path: str = "./chroma_db"  # Only used if vector_store_type is "chromadb"
+    pinecone_api_key: str = ""
+    pinecone_index_name: str = "news-summarizer"
+
     # Database Configuration
     database_path: str = "./data/news_cache.db"
     
@@ -75,9 +77,12 @@ class Settings(BaseSettings):
     def ensure_directories(self) -> None:
         """Create necessary directories if they don't exist."""
         directories = [
-            Path(self.vector_store_path),
             Path(self.database_path).parent,
         ]
+        
+        # Only create vector store directory if using ChromaDB
+        if self.vector_store_type == "chromadb":
+            directories.append(Path(self.vector_store_path))
         
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)

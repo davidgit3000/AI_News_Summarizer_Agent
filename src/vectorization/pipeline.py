@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 from src.vectorization.embedder import TextEmbedder
-from src.database.db_manager import DatabaseManager
+from src.database.db_factory import get_database_manager
 from config import get_settings
 
 # Configure logging
@@ -33,7 +33,7 @@ class VectorizationPipeline:
             db_path: Database path (optional, uses config if not provided)
         """
         self.embedder = TextEmbedder(model_name=model_name)
-        self.db = DatabaseManager(db_path=db_path)
+        self.db = get_database_manager()
         self.settings = get_settings()
         
         logger.info("VectorizationPipeline initialized successfully")
@@ -57,8 +57,8 @@ class VectorizationPipeline:
         # Generate embedding
         embedding = self.embedder.embed_article(article)
         
-        # Store in database
-        success = self.db.update_embedding(article_id, embedding)
+        # Store in database with model name
+        success = self.db.update_embedding(article_id, embedding, self.embedder.model_name)
         
         if success:
             logger.debug(f"Vectorized article {article_id}: {article.get('title', 'Untitled')[:50]}")
@@ -114,7 +114,7 @@ class VectorizationPipeline:
             
             # Store embeddings
             for article, embedding in zip(batch, embeddings):
-                success = self.db.update_embedding(article['id'], embedding)
+                success = self.db.update_embedding(article['id'], embedding, self.embedder.model_name)
                 if success:
                     successful += 1
                 else:

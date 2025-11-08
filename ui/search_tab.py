@@ -3,7 +3,7 @@ Search tab component for finding and summarizing individual articles.
 """
 
 import streamlit as st
-from src.database.db_manager import DatabaseManager
+from src.database.db_factory import get_database_manager
 from src.summarization.pipeline import SummarizationPipeline
 from dateutil import parser
 
@@ -30,7 +30,7 @@ def render_search_tab():
             search_query = st.text_input("Enter topic or keyword", placeholder="e.g., artificial intelligence")
         else:
             # Get available sources from database
-            db = DatabaseManager()
+            db = get_database_manager()
             stats = db.get_stats()
             sources = list(stats.get('articles_by_source', {}).keys())
             search_query = st.selectbox("Select Source", [""] + sorted(sources))
@@ -43,11 +43,31 @@ def render_search_tab():
         else:
             with st.spinner("Searching articles..."):
                 try:
-                    db = DatabaseManager()
+                    db = get_database_manager()
                     
                     if search_mode == "Topic/Keyword":
-                        # Search by keyword in title or content
-                        articles = db.search_articles(search_query, limit=max_results)
+                        # Use semantic search via retrieval pipeline
+                        from src.retrieval.pipeline import RetrievalPipeline
+                        
+                        if 'retrieval_pipeline' not in st.session_state or st.session_state.retrieval_pipeline is None:
+                            st.session_state.retrieval_pipeline = RetrievalPipeline()
+                        
+                        # Semantic search with Pinecone/ChromaDB
+                        results = st.session_state.retrieval_pipeline.retrieve_for_query(
+                            query=search_query,
+                            top_k=max_results,
+                            min_similarity=0.3  # Filter out low-relevance results
+                        )
+                        
+                        # Convert to article format
+                        articles = []
+                        for result in results:
+                            article_id = int(result['id'])
+                            # Get full article from database
+                            full_article = db.get_article_by_id(article_id)
+                            if full_article:
+                                full_article['similarity'] = result['similarity']
+                                articles.append(full_article)
                     else:
                         # Get articles by source
                         articles = db.get_articles_by_source(search_query, limit=max_results)
@@ -69,7 +89,13 @@ def render_search_tab():
         st.subheader(f"📰 Search Results ({len(st.session_state.search_results)} articles)")
         
         for idx, article in enumerate(st.session_state.search_results, 1):
-            with st.expander(f"**{idx}. {article['title']}**", expanded=False):
+            # Show similarity score if available
+            title_suffix = ""
+            if article.get('similarity'):
+                relevance_pct = article['similarity'] * 100
+                title_suffix = f" (Relevance: {relevance_pct:.1f}%)"
+            
+            with st.expander(f"**{idx}. {article['title']}**{title_suffix}", expanded=False):
                 col1, col2 = st.columns([3, 1])
                 
                 with col1:

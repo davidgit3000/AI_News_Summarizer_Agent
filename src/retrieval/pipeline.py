@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime
 
 from src.retrieval.vector_store import VectorStore
-from src.database.db_manager import DatabaseManager
+from src.database.db_factory import get_database_manager
 from config import get_settings
 
 # Configure logging
@@ -21,7 +21,7 @@ class RetrievalPipeline:
     
     def __init__(
         self,
-        collection_name: str = "news_articles",
+        collection_name: str = "news-summarizer",
         db_path: Optional[str] = None,
         vector_store_path: Optional[str] = None
     ):
@@ -33,12 +33,15 @@ class RetrievalPipeline:
             db_path: Database path (optional)
             vector_store_path: Vector store path (optional)
         """
-        self.db = DatabaseManager(db_path=db_path)
-        self.vector_store = VectorStore(
-            collection_name=collection_name,
-            persist_directory=vector_store_path
-        )
+        self.db = get_database_manager()
         self.settings = get_settings()
+        # Choose vector store based on config
+        if self.settings.vector_store_type == "pinecone":
+            from src.retrieval.pinecone_store import PineconeStore
+            self.vector_store = PineconeStore(index_name=collection_name)
+        else:
+            from src.retrieval.vector_store import VectorStore
+            self.vector_store = VectorStore(collection_name=collection_name)
         
         logger.info("RetrievalPipeline initialized successfully")
     
@@ -137,13 +140,32 @@ class RetrievalPipeline:
             
             # Add batch to vector store
             if batch_ids:
-                result = self.vector_store.add_articles(
-                    article_ids=batch_ids,
-                    texts=batch_texts,
-                    metadatas=batch_metadatas
-                )
-                synced += result['added']
-                failed += result['failed']
+                # Check if using Pinecone or ChromaDB
+                if hasattr(self.vector_store, 'index'):  # Pinecone
+                    # For Pinecone, we need articles with embeddings
+                    from src.vectorization.embedder import TextEmbedder
+                    embedder = TextEmbedder()
+                    
+                    # Get article objects with embeddings
+                    batch_articles = []
+                    batch_embeddings = []
+                    for article_id in batch_ids:
+                        article = next((a for a in all_articles if str(a['id']) == article_id), None)
+                        if article and article.get('embedding') is not None:
+                            batch_articles.append(article)
+                            batch_embeddings.append(article['embedding'])
+                    
+                    if batch_articles:
+                        count = self.vector_store.add_articles(batch_articles, batch_embeddings)
+                        synced += count
+                else:  # ChromaDB
+                    result = self.vector_store.add_articles(
+                        article_ids=batch_ids,
+                        texts=batch_texts,
+                        metadatas=batch_metadatas
+                    )
+                    synced += result['added']
+                    failed += result['failed']
         
         stats = {
             'synced': synced,
@@ -179,12 +201,19 @@ class RetrievalPipeline:
         if source_filter:
             where = {"source": source_filter}
         
-        # Search vector store
-        results = self.vector_store.search(
-            query=query,
-            n_results=top_k,
-            where=where
-        )
+        # Search vector store (handle both Pinecone and ChromaDB)
+        if hasattr(self.vector_store, 'index'):  # Pinecone
+            results = self.vector_store.search_by_text(
+                query=query,
+                top_k=top_k,
+                filter_dict=where
+            )
+        else:  # ChromaDB
+            results = self.vector_store.search(
+                query=query,
+                n_results=top_k,
+                where=where
+            )
         
         # Filter by minimum similarity
         filtered_results = [

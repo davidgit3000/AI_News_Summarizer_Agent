@@ -49,11 +49,21 @@ class PostgresManager:
         if not self.database_url:
             raise ValueError("DATABASE_URL environment variable not set")
         
-        # Create engine
+        # Create engine with connection pooling for better performance
         self.engine = create_engine(
             self.database_url,
-            poolclass=NullPool,  # Serverless-friendly
-            echo=False
+            pool_size=5,  # Keep 5 connections ready
+            max_overflow=10,  # Allow up to 10 additional connections
+            pool_pre_ping=True,  # Verify connections before using
+            pool_recycle=3600,  # Recycle connections after 1 hour
+            echo=False,
+            connect_args={
+                "connect_timeout": 10,  # 10 second timeout
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
+            }
         )
         
         # Create session factory
@@ -271,5 +281,58 @@ class PostgresManager:
                 'published_at': article.published_at.isoformat() if article.published_at else None,
                 'embedding': np.frombuffer(article.embedding, dtype=np.float32) if article.embedding else None
             }
+        finally:
+            session.close()
+    
+    def get_articles_with_embeddings(self) -> List[Dict[str, Any]]:
+        """Get all articles that have embeddings."""
+        session = self.get_session()
+        
+        try:
+            articles = session.query(Article).filter(Article.embedding.isnot(None)).all()
+            
+            return [
+                {
+                    'id': a.id,
+                    'title': a.title,
+                    'description': a.description,
+                    'content': a.content,
+                    'url': a.url,
+                    'source': a.source,
+                    'author': a.author,
+                    'published_at': a.published_at.isoformat() if a.published_at else None,
+                    'embedding': a.embedding  # Keep as bytes for migration
+                }
+                for a in articles
+            ]
+        finally:
+            session.close()
+    
+    def get_all_articles(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        """Get all articles from database."""
+        session = self.get_session()
+        
+        try:
+            query = session.query(Article).order_by(Article.published_at.desc())
+            
+            if limit:
+                query = query.limit(limit)
+            
+            articles = query.all()
+            
+            return [
+                {
+                    'id': a.id,
+                    'title': a.title,
+                    'description': a.description,
+                    'content': a.content,
+                    'url': a.url,
+                    'source': a.source,
+                    'author': a.author,
+                    'published_at': a.published_at.isoformat() if a.published_at else None,
+                    'embedding': np.frombuffer(a.embedding, dtype=np.float32) if a.embedding else None
+                }
+                for a in articles
+            ]
         finally:
             session.close()
