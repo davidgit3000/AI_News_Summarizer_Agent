@@ -6,12 +6,19 @@ This folder contains modularized Streamlit UI components for the AI News Summari
 
 ```
 ui/
-├── __init__.py           # Package initialization and exports
-├── sidebar.py            # Sidebar with stats and settings
-├── ingestion_tab.py      # News ingestion tab
-├── summarization_tab.py  # Summarization tab
-├── validation_tab.py     # Validation tab
-└── analytics_tab.py      # Analytics tab
+├── __init__.py                    # Package initialization and exports
+├── sidebar.py                     # Sidebar with stats and settings
+├── ingestion_tab.py               # News ingestion tab
+├── search_tab.py                  # Article search and single-article summarization
+├── summarization_tab.py           # Main summarization coordinator (25 lines)
+├── analytics_tab.py               # Analytics and statistics
+├── components/                    # Reusable UI components
+│   ├── __init__.py
+│   └── validation_display.py     # Reusable validation results display
+└── summarization/                 # Summarization sub-components
+    ├── __init__.py
+    ├── standard_summary.py        # Standard topic summarization with validation
+    └── qa_summary.py              # Q&A-based summarization
 ```
 
 ## Components
@@ -28,55 +35,67 @@ Handles news article fetching with three modes:
 - **By Topic**: Search for specific topics with date range
 - **Everything**: Advanced search with sorting options
 
-Features automatic vectorization and ChromaDB sync after fetching.
+Features automatic vectorization and Pinecone sync after fetching.
 
-### `summarization_tab.py`
-Generates summaries using RAG:
-- Topic-based search
+### `search_tab.py`
+Article search and single-article summarization:
+- **Search Articles**: Query articles by topic with similarity search
+- **View Article Details**: Read full article content
+- **Summarize Individual Articles**: Generate summaries with style options
+- **Validate Summaries**: Quality metrics and optional fidelity checking
+
+### `summarization_tab.py` (Refactored)
+Main coordinator for summarization features (25 lines):
+- Delegates to `summarization/standard_summary.py` for topic summarization
+- Delegates to `summarization/qa_summary.py` for Q&A mode
+- Clean separation of concerns
+
+### `summarization/standard_summary.py`
+Standard topic-based summarization with validation (200 lines):
+- Topic-based RAG search
 - Configurable article count and summary length
-- Multiple styles: concise, comprehensive, bullet points
-- Displays sources with similarity scores
+- Multiple styles: concise, comprehensive, bullet_points, executive, technical, eli5
+- Integrated validation with quality metrics
+- Optional fidelity checking (Gemini)
+- Uses `components/validation_display.py` for results
 
-### `validation_tab.py`
-Evaluates summary quality:
-- **Quality Metrics**: Readability, lexical diversity, compression ratio
-- **Fidelity Check**: Gemini-powered hallucination detection
-- **Source References**: Links to original articles
+### `summarization/qa_summary.py`
+Q&A-based summarization interface (160 lines):
+- Multi-question input support
+- Generates targeted answers from retrieved articles
+- Displays overview and Q&A pairs
+- Shows source articles with metadata
+- Clears validation state to prevent background checks
+
+### `components/validation_display.py`
+Reusable validation results component (106 lines):
+- **Quality Metrics**: Overall score, compression, readability, lexical diversity, information density, coherence
+- **Fidelity Analysis**: Overall fidelity, factual consistency, hallucination detection
+- **Recommendations**: Actionable suggestions for improvement
+- **Reusable**: Used in both `search_tab.py` and `summarization/standard_summary.py`
 
 ### `analytics_tab.py`
-Placeholder for future analytics features:
-- Summary quality trends
-- Topic analysis
-- Source distribution
-- Performance metrics
+Database statistics and analytics:
+- Article count and distribution
+- Source breakdown
+- Ingestion timeline
+- Database health metrics
 
 ## Usage
 
-### Option 1: Use Modular Version
-Run the modular version that uses these components:
-```bash
-streamlit run app_modular.py
-```
-
-### Option 2: Keep Original
-Keep using the original `app.py` (all code in one file):
+Run the application:
 ```bash
 streamlit run app.py
-```
-
-## Benefits of Modularization
-
-✅ **Easy Maintenance**: Each tab is in its own file  
-✅ **Better Organization**: Clear separation of concerns  
-✅ **Reusability**: Components can be reused or tested independently  
-✅ **Collaboration**: Multiple developers can work on different tabs  
-✅ **Scalability**: Easy to add new tabs or features  
+``` 
 
 ## Adding New Components
 
+### Adding a New Tab
 1. Create a new file in `ui/` (e.g., `ui/new_tab.py`)
 2. Define a render function:
    ```python
+   import streamlit as st
+   
    def render_new_tab():
        st.header("New Feature")
        # Your UI code here
@@ -86,8 +105,41 @@ streamlit run app.py
    from .new_tab import render_new_tab
    __all__ = [..., 'render_new_tab']
    ```
-4. Use it in `app_modular.py`:
+4. Use it in `app.py`:
    ```python
-   with tab5:
+   from ui import render_new_tab
+   
+   tab1, tab2, ..., tabN = st.tabs([..., "🆕 New Feature"])
+   with tabN:
        render_new_tab()
    ```
+
+### Adding a Reusable Component
+1. Create file in `ui/components/` (e.g., `ui/components/chart_display.py`)
+2. Define reusable function:
+   ```python
+   import streamlit as st
+   
+   def render_chart(data: dict):
+       """Reusable chart display component."""
+       # Chart rendering logic
+   ```
+3. Export in `ui/components/__init__.py`:
+   ```python
+   from .chart_display import render_chart
+   __all__ = [..., 'render_chart']
+   ```
+4. Import and use anywhere:
+   ```python
+   from ui.components import render_chart
+   
+   render_chart(my_data)
+   ```
+
+## File Organization Best Practices
+
+- **Main tabs** → `ui/[tab_name]_tab.py`
+- **Reusable components** → `ui/components/[component_name].py`
+- **Tab sub-components** → `ui/[tab_name]/[feature].py`
+- **Keep main files small** → Delegate to sub-components
+- **Single responsibility** → Each file should do one thing well

@@ -4,7 +4,10 @@ Search tab component for finding and summarizing individual articles.
 
 import streamlit as st
 from src.database.db_factory import get_database_manager
+from src.retrieval.pipeline import RetrievalPipeline
 from src.summarization.pipeline import SummarizationPipeline
+from src.validation.pipeline import ValidationPipeline
+from ui.components.validation_display import render_validation_results
 from dateutil import parser
 
 
@@ -47,7 +50,7 @@ def render_search_tab():
                     
                     if search_mode == "Topic/Keyword":
                         # Use semantic search via retrieval pipeline
-                        from src.retrieval.pipeline import RetrievalPipeline
+                        # from src.retrieval.pipeline import RetrievalPipeline
                         
                         if 'retrieval_pipeline' not in st.session_state or st.session_state.retrieval_pipeline is None:
                             st.session_state.retrieval_pipeline = RetrievalPipeline()
@@ -242,7 +245,7 @@ def render_article_summary():
             
             with st.spinner("Running validation..."):
                 try:
-                    from src.validation.pipeline import ValidationPipeline
+                    # from src.validation.pipeline import ValidationPipeline
                     
                     # Get stored summary and article
                     summary = st.session_state.current_summary
@@ -266,56 +269,8 @@ def render_article_summary():
                         source_articles=None
                     )
                     
-                    # Display quality metrics
-                    st.markdown("#### 📈 Quality Metrics")
-                    quality = validation_result['quality_assessment']
-                    
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric(
-                        "Overall Quality", 
-                        quality['overall'].upper(),
-                        help="Overall assessment of summary quality"
-                    )
-                    col2.metric(
-                        "Score", 
-                        f"{quality['score']:.0f}/100",
-                        help="Composite quality score (0-100)"
-                    )
-                    col3.metric(
-                        "Compression", 
-                        f"{validation_result['metrics']['compression_ratio']:.1%}",
-                        help="Ratio of summary to original length. Ideal: 20-40% (concise but complete)"
-                    )
-                    
-                    # Detailed metrics
-                    with st.expander("📊 Detailed Metrics"):
-                        col1, col2, col3, col4 = st.columns(4)
-                        col1.metric(
-                            "Readability", 
-                            f"{validation_result['metrics']['readability']['flesch_reading_ease']:.1f}",
-                            help="Flesch Reading Ease score (0-100). Ideal: 60-80 (plain English)"
-                        )
-                        col2.metric(
-                            "Lexical Diversity", 
-                            f"{validation_result['metrics']['lexical_diversity']:.1%}",
-                            help="Ratio of unique words to total words. Ideal: 60-80% (varied vocabulary without repetition)"
-                        )
-                        col3.metric(
-                            "Information Density", 
-                            f"{validation_result['metrics']['information_density']:.1%}",
-                            help="Ratio of important words (nouns, verbs, adjectives) to total words. Ideal: 30-60% (informative without filler)"
-                        )
-                        col4.metric(
-                            "Coherence", 
-                            f"{validation_result['metrics']['coherence']:.1%}",
-                            help="Semantic similarity between consecutive sentences. Ideal: >30% (good logical flow)"
-                        )
-                    
-                    # Recommendations
-                    if quality['recommendations']:
-                        st.markdown("#### 💡 Recommendations")
-                        for rec in quality['recommendations']:
-                            st.write(f"• {rec}")
+                    # Display validation results using reusable component
+                    render_validation_results(validation_result, run_fidelity=False)
                     
                     # Reset validation flag
                     if st.button("✅ Done", key="close_validation"):
