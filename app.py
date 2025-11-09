@@ -108,7 +108,7 @@ def main():
     tab1, tab2, tab3, tab4 = st.tabs([
         "📥 Ingest",
         "🔍 Search",
-        "📝 Summarize",
+        "📝 Summarize and Validate",
         "📊 Stats"
     ])
     
