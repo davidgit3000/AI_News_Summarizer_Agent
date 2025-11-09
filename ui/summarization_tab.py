@@ -43,7 +43,7 @@ def render_standard_summary():
                 "technical",
                 "eli5"
             ],
-            help="Choose summary style: concise (brief), comprehensive (detailed), bullet_points (key points), executive (business focus), technical (detailed analysis), eli5 (simple explanation)"
+            help="concise (brief overview) | comprehensive (detailed analysis) | bullet_points (key points list) | executive (business-focused) | technical (technical details) | eli5 (Explain Like I'm 5: simple language, short sentences, no jargon - perfect for beginners)"
         )
     
     if st.button("✨ Generate Summary", type="primary"):
