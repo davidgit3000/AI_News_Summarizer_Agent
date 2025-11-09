@@ -91,30 +91,36 @@ def render_validation_tab():
                         col3.metric(
                             "Compression", 
                             f"{validation_result['metrics']['compression_ratio']:.1%}",
-                            help="Ratio of summary length to original content length (lower = more concise)"
+                            help="Ratio of summary to original length. Ideal: 20-40% (concise but complete)"
                         )
                         
                         # Detailed metrics
                         st.markdown("---")
-                        col1, col2, col3 = st.columns(3)
+                        col1, col2, col3, col4 = st.columns(4)
                         
                         with col1:
                             st.metric(
                                 "Readability", 
                                 f"{validation_result['metrics']['readability']['flesch_reading_ease']:.1f}",
-                                help="Flesch Reading Ease score (0-100). Higher = easier to read. 60-70 is ideal for general audience."
+                                help="Flesch Reading Ease score (0-100). Ideal: 60-80 (plain English)"
                             )
                         with col2:
                             st.metric(
                                 "Lexical Diversity", 
                                 f"{validation_result['metrics']['lexical_diversity']:.1%}",
-                                help="Ratio of unique words to total words. Higher = more varied vocabulary."
+                                help="Ratio of unique words to total words. Ideal: 60-80% (varied vocabulary without repetition)"
                             )
                         with col3:
                             st.metric(
                                 "Information Density", 
                                 f"{validation_result['metrics']['information_density']:.1%}",
-                                help="Ratio of important words (nouns, verbs, adjectives) to total words. Higher = more informative."
+                                help="Ratio of important words (nouns, verbs, adjectives) to total words. Ideal: 30-60% (informative without filler)"
+                            )
+                        with col4:
+                            st.metric(
+                                "Coherence", 
+                                f"{validation_result['metrics']['coherence']:.1%}",
+                                help="Semantic similarity between consecutive sentences. Ideal: >30% (good logical flow)"
                             )
                         
                         # Recommendations

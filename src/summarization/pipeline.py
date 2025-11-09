@@ -361,6 +361,36 @@ Articles:
 
 Concise summary:"""
         
+        elif style == "executive":
+            return f"""Based on the following articles about {topic}, provide an executive summary (max {max_length} words).
+Focus on business impact, key decisions, strategic implications, and actionable insights.
+Synthesize the information into a cohesive narrative.
+
+Articles:
+{context}
+
+Executive summary:"""
+        
+        elif style == "technical":
+            return f"""Based on the following articles about {topic}, provide a technical summary (max {max_length} words).
+Include technical details, methodologies, specifications, and key technical insights.
+Synthesize the information into a cohesive narrative.
+
+Articles:
+{context}
+
+Technical summary:"""
+        
+        elif style == "eli5":
+            return f"""Based on the following articles about {topic}, explain the topic in very simple terms (max {max_length} words).
+Use short sentences (under 15 words each), simple everyday words, and avoid technical jargon.
+Write as if explaining to a 10-year-old.
+
+Articles:
+{context}
+
+Simple explanation:"""
+        
         else:  # comprehensive
             return f"""Based on the following articles about {topic}, provide a comprehensive summary that covers the main points and key developments (max {max_length} words).
 Synthesize the information into a cohesive narrative, not a list of articles.
@@ -377,7 +407,13 @@ Comprehensive summary:"""
             return "You are a professional news analyst. Summarize information in clear bullet points."
         elif style == "concise":
             return "You are a professional news summarizer. Provide concise, accurate summaries."
-        else:
+        elif style == "executive":
+            return "You are a business analyst. Provide executive summaries focused on strategic impact and business value."
+        elif style == "technical":
+            return "You are a technical analyst. Provide detailed technical summaries with specific methodologies and technical details."
+        elif style == "eli5":
+            return "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms."
+        else:  # comprehensive
             return "You are a professional news analyst. Provide comprehensive, well-structured summaries."
 
 

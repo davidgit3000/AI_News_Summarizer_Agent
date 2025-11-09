@@ -75,14 +75,32 @@ def render_sidebar():
         st.write(f"**Max Tokens:** {settings.llm_max_tokens}")
     
     # Retrieval Settings
-    with st.sidebar.expander("🔍 Retrieval Settings"):
-        st.write(f"**Top K Results:** {settings.top_k_results}")
-        st.write(f"**Similarity Threshold:** {settings.similarity_threshold}")
+    with st.sidebar.expander("🔍 Retrieval Settings", expanded=True):
+        top_k = st.slider(
+            "Top K Results",
+            min_value=1,
+            max_value=20,
+            value=settings.top_k_results,
+            help="Maximum number of articles to retrieve"
+        )
+        
+        similarity = st.slider(
+            "Similarity Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=settings.similarity_threshold,
+            step=0.05,
+            help="Minimum similarity score (0-1) for relevance"
+        )
+        
+        # Store in session state for use across tabs
+        st.session_state.top_k_results = top_k
+        st.session_state.similarity_threshold = similarity
     
     # Vector Store Settings
     with st.sidebar.expander("💾 Vector Store"):
         st.write(f"**Type:** {settings.vector_store_type}")
-        st.write(f"**Path:** {settings.vector_store_path}")
+        # st.write(f"**Path:** {settings.vector_store_path}")
     
     st.sidebar.markdown("---")
     
@@ -101,8 +119,11 @@ def render_sidebar():
         - Fidelity checking
         
         **Tech Stack:**
-        - OpenAI GPT
-        - Google Gemini
-        - ChromaDB
+        - Python
+        - Streamlit
         - Sentence Transformers
+        - OpenAI
+        - Google Gemini
+        - Pinecone
+        - NeonDB
         """)

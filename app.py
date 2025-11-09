@@ -18,7 +18,6 @@ from ui import (
     render_sidebar,
     render_ingestion_tab,
     render_summarization_tab,
-    render_validation_tab,
     render_analytics_tab,
     render_search_tab
 )
@@ -106,12 +105,11 @@ def main():
     st.markdown('<p class="sub-header">Intelligent news aggregation and summarization powered by RAG and LLMs</p>', unsafe_allow_html=True)
     
     # Create tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📥 Ingest",
         "🔍 Search",
         "📝 Summarize",
-        "✅ Validate",
-        "📊 Analytics"
+        "📊 Stats"
     ])
     
     # Render each tab
@@ -125,9 +123,6 @@ def main():
         render_summarization_tab()
     
     with tab4:
-        render_validation_tab()
-    
-    with tab5:
         render_analytics_tab()
 
 

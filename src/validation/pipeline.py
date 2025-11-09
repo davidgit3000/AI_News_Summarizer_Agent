@@ -344,10 +344,10 @@ class ValidationPipeline:
             score += 20
         elif 0.1 <= compression < 0.2 or 0.4 < compression <= 0.5:
             score += 15
-            recommendations.append("Consider adjusting summary length")
+            recommendations.append("COMPRESSION: Consider adjusting summary length. Ideal: 20-40%")
         else:
             score += 10
-            recommendations.append("Summary length may not be optimal")
+            recommendations.append("COMPRESSION: Summary length may not be optimal. Ideal: 20-40%")
         
         # Readability (ideal: 60-80)
         flesch = metrics['readability']['flesch_reading_ease']
@@ -358,9 +358,9 @@ class ValidationPipeline:
         else:
             score += 10
             if flesch < 50:
-                recommendations.append("Summary may be too complex")
+                recommendations.append("READABILITY: Summary may be too complex. Ideal: 60-80")
             else:
-                recommendations.append("Summary may be too simple")
+                recommendations.append("READABILITY: Summary may be too simple. Ideal: 60-80")
         
         # Lexical diversity (ideal: 0.6-0.8)
         diversity = metrics['lexical_diversity']
@@ -371,7 +371,7 @@ class ValidationPipeline:
         else:
             score += 10
             if diversity < 0.5:
-                recommendations.append("Consider using more varied vocabulary")
+                recommendations.append("LEXICAL DIVERSITY: Consider using more varied vocabulary. Ideal: 60-80%")
         
         # Information density (ideal: 0.3-0.6)
         density = metrics['information_density']
@@ -382,7 +382,7 @@ class ValidationPipeline:
         else:
             score += 10
             if density < 0.2:
-                recommendations.append("Summary may be missing key information")
+                recommendations.append("INFORMATION DENSITY: Summary may be missing key information. Ideal: 30-60%")
         
         # Coherence (ideal: > 0.3)
         coherence = metrics['coherence']
@@ -392,7 +392,7 @@ class ValidationPipeline:
             score += 15
         else:
             score += 10
-            recommendations.append("Consider improving summary coherence")
+            recommendations.append("COHERENCE: Consider improving summary coherence. Ideal: > 30%")
         
         # Determine overall quality
         if score >= 85:
@@ -405,7 +405,7 @@ class ValidationPipeline:
             overall = "needs improvement"
         
         if not recommendations:
-            recommendations.append("Summary quality is good overall")
+            recommendations.append("QUALITY: Summary quality is good overall! 🎉")
         
         return {
             'score': score,

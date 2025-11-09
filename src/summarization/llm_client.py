@@ -132,20 +132,51 @@ class LLMClient:
 {text}
 
 Summary (bullet points):"""
-        elif style == "detailed":
-            prompt = f"""Provide a detailed summary of the following text (max {max_length} words):
+            system_message = "You are a professional news analyst. Summarize information in clear bullet points."
+        
+        elif style == "comprehensive" or style == "detailed":
+            prompt = f"""Provide a detailed, comprehensive summary of the following text (max {max_length} words):
 
 {text}
 
-Detailed summary:"""
-        else:  # concise
+Comprehensive summary:"""
+            system_message = "You are a professional news analyst. Provide comprehensive, well-structured summaries."
+        
+        elif style == "executive":
+            prompt = f"""Provide an executive summary of the following text (max {max_length} words).
+Focus on business impact, key decisions, strategic implications, and actionable insights:
+
+{text}
+
+Executive summary:"""
+            system_message = "You are a business analyst. Provide executive summaries focused on strategic impact and business value."
+        
+        elif style == "technical":
+            prompt = f"""Provide a technical summary of the following text (max {max_length} words).
+Include technical details, methodologies, specifications, and key technical insights:
+
+{text}
+
+Technical summary:"""
+            system_message = "You are a technical analyst. Provide detailed technical summaries with specific methodologies and technical details."
+        
+        elif style == "eli5":
+            prompt = f"""Explain the following text in very simple terms (max {max_length} words).
+Use short sentences (under 15 words each), simple everyday words, and avoid technical jargon.
+Write as if explaining to a 10-year-old:
+
+{text}
+
+Simple explanation:"""
+            system_message = "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms."
+        
+        else:  # concise (default)
             prompt = f"""Provide a concise summary of the following text (max {max_length} words):
 
 {text}
 
 Summary:"""
-        
-        system_message = "You are a professional news summarizer. Provide accurate, concise summaries."
+            system_message = "You are a professional news summarizer. Provide accurate, concise summaries."
         
         return self.generate(
             prompt=prompt,

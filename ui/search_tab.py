@@ -53,10 +53,16 @@ def render_search_tab():
                             st.session_state.retrieval_pipeline = RetrievalPipeline()
                         
                         # Semantic search with Pinecone/ChromaDB
+                        # Use sidebar settings if available, otherwise use config defaults
+                        from config import get_settings
+                        settings = get_settings()
+                        top_k = st.session_state.get('top_k_results', settings.top_k_results)
+                        min_sim = st.session_state.get('similarity_threshold', settings.similarity_threshold)
+                        
                         results = st.session_state.retrieval_pipeline.retrieve_for_query(
                             query=search_query,
-                            top_k=max_results,
-                            min_similarity=0.15  # Lower threshold for short queries like "ai"
+                            top_k=top_k,
+                            min_similarity=min_sim
                         )
                         
                         # Convert to article format
@@ -158,8 +164,16 @@ def render_article_summary():
         with col2:
             style = st.selectbox(
                 "Style",
-                ["concise", "comprehensive", "bullet_points"],
-                key="article_summary_style"
+                [
+                    "concise",
+                    "comprehensive",
+                    "bullet_points",
+                    "executive",
+                    "technical",
+                    "eli5"
+                ],
+                key="article_summary_style",
+                help="Choose summary style: concise (brief), comprehensive (detailed), bullet_points (key points), executive (business focus), technical (detailed analysis), eli5 (simple explanation)"
             )
         
         if st.button("✨ Generate Summary", type="primary", key="generate_article_summary"):
@@ -174,45 +188,142 @@ def render_article_summary():
                     if not content:
                         st.warning("⚠️ Article content not available")
                     else:
-                        # Generate summary using LLM directly
-                        prompt = f"""Summarize the following article in approximately {summary_length} words.
-                                        Style: {style}
-
-                                        Article:
-                                        {content}
-
-                                        Summary:"""
-                        
-                        summary = st.session_state.summarization_pipeline.llm_client.generate(
-                            prompt=prompt,
-                            system_message="You are a professional news analyst.",
-                            max_tokens=summary_length * 2
+                        # Generate summary using the proper summarize method with style-specific prompts
+                        summary = st.session_state.summarization_pipeline.llm_client.summarize(
+                            text=content,
+                            max_length=summary_length,
+                            style=style
                         )
                         
-                        st.success("✅ Summary generated!")
-                        st.markdown("---")
-                        st.markdown(
-                            f"""
-                            <div style="
-                                background-color: #1e1e1e;
-                                border: 1px solid #4a4a4a;
-                                border-radius: 5px;
-                                padding: 15px 20px;
-                                margin: 0;
-                                color: #e0e0e0;
-                                font-size: 16px;
-                                line-height: 1.6;
-                                white-space: pre-wrap;
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                            ">
-                            {summary.strip()}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                        # Store summary in session state
+                        st.session_state.current_summary = summary
+                        st.session_state.current_article_for_validation = article
+                        st.session_state.summary_generated = True
                 
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
+        
+        # Display summary if it exists (outside the button block so it persists after rerun)
+        if st.session_state.get('summary_generated') and st.session_state.get('current_summary'):
+            st.success("✅ Summary generated!")
+            st.markdown("---")
+            st.markdown(
+                f"""
+                <div style="
+                    background-color: #1e1e1e;
+                    border: 1px solid #4a4a4a;
+                    border-radius: 5px;
+                    padding: 15px 20px;
+                    margin: 0;
+                    color: #e0e0e0;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    white-space: pre-wrap;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                ">
+                {st.session_state.current_summary.strip()}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Add validation button
+            st.markdown("<br>", unsafe_allow_html=True)
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                if st.button("📊 Validate Summary", key="validate_from_search"):
+                    st.session_state.show_validation = True
+                    st.rerun()
+        
+        # Show validation results if requested (outside the try block)
+        if st.session_state.get('show_validation', False) and st.session_state.get('current_summary'):
+            st.markdown("---")
+            st.subheader("📊 Summary Validation")
+            
+            with st.spinner("Running validation..."):
+                try:
+                    from src.validation.pipeline import ValidationPipeline
+                    
+                    # Get stored summary and article
+                    summary = st.session_state.current_summary
+                    article = st.session_state.current_article_for_validation
+                    
+                    # Get article content
+                    article_content = article.get('content') or article.get('description', '')
+                    
+                    # Initialize validation pipeline with existing summarization pipeline
+                    if 'validation_pipeline' not in st.session_state or st.session_state.validation_pipeline is None:
+                        st.session_state.validation_pipeline = ValidationPipeline(
+                            summarization_pipeline=st.session_state.get('summarization_pipeline'),
+                            enable_fidelity_check=False
+                        )
+                    
+                    # Validate the summary
+                    validation_result = st.session_state.validation_pipeline.evaluate_summary(
+                        summary=summary,
+                        original_text=article_content,
+                        check_fidelity=False,
+                        source_articles=None
+                    )
+                    
+                    # Display quality metrics
+                    st.markdown("#### 📈 Quality Metrics")
+                    quality = validation_result['quality_assessment']
+                    
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric(
+                        "Overall Quality", 
+                        quality['overall'].upper(),
+                        help="Overall assessment of summary quality"
+                    )
+                    col2.metric(
+                        "Score", 
+                        f"{quality['score']:.0f}/100",
+                        help="Composite quality score (0-100)"
+                    )
+                    col3.metric(
+                        "Compression", 
+                        f"{validation_result['metrics']['compression_ratio']:.1%}",
+                        help="Ratio of summary to original length. Ideal: 20-40% (concise but complete)"
+                    )
+                    
+                    # Detailed metrics
+                    with st.expander("📊 Detailed Metrics"):
+                        col1, col2, col3, col4 = st.columns(4)
+                        col1.metric(
+                            "Readability", 
+                            f"{validation_result['metrics']['readability']['flesch_reading_ease']:.1f}",
+                            help="Flesch Reading Ease score (0-100). Ideal: 60-80 (plain English)"
+                        )
+                        col2.metric(
+                            "Lexical Diversity", 
+                            f"{validation_result['metrics']['lexical_diversity']:.1%}",
+                            help="Ratio of unique words to total words. Ideal: 60-80% (varied vocabulary without repetition)"
+                        )
+                        col3.metric(
+                            "Information Density", 
+                            f"{validation_result['metrics']['information_density']:.1%}",
+                            help="Ratio of important words (nouns, verbs, adjectives) to total words. Ideal: 30-60% (informative without filler)"
+                        )
+                        col4.metric(
+                            "Coherence", 
+                            f"{validation_result['metrics']['coherence']:.1%}",
+                            help="Semantic similarity between consecutive sentences. Ideal: >30% (good logical flow)"
+                        )
+                    
+                    # Recommendations
+                    if quality['recommendations']:
+                        st.markdown("#### 💡 Recommendations")
+                        for rec in quality['recommendations']:
+                            st.write(f"• {rec}")
+                    
+                    # Reset validation flag
+                    if st.button("✅ Done", key="close_validation"):
+                        st.session_state.show_validation = False
+                        st.rerun()
+                
+                except Exception as e:
+                    st.error(f"❌ Validation error: {str(e)}")
     
     else:  # Ask Questions mode
         st.write("**Ask questions about this article:**")
@@ -278,4 +389,9 @@ def render_article_summary():
     if st.button("⬅️ Back to Search Results"):
         st.session_state.show_article_summary = False
         st.session_state.selected_article = None
+        # Clear summary and validation states
+        st.session_state.summary_generated = False
+        st.session_state.show_validation = False
+        st.session_state.current_summary = None
+        st.session_state.current_article_for_validation = None
         st.rerun()
