@@ -76,7 +76,7 @@ def render_validation_tab():
                         
                         quality = validation_result['quality_assessment']
                         
-                        # Overall score
+                        # Overall score 
                         col1, col2, col3 = st.columns(3)
                         col1.metric(
                             "Overall Quality", 
