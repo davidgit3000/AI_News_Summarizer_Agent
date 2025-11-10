@@ -71,14 +71,14 @@ class NewsFetcher:
                 'sources': sources_to_use,
                 'category': category,
                 'country': country,
-                'language': self.language,
-                'page_size': page_size or self.page_size
+                # 'language': self.language,
+                'pageSize': page_size or self.page_size
             }
             
             # Remove None and empty string values
             params = {k: v for k, v in params.items() if v is not None and v != ''}
             
-            # Note: sources parameter cannot be mixed with country/category
+            # Note: sources parameter cannot be mixed with country/category (according to NewsAPI docs)
             if 'sources' in params and ('country' in params or 'category' in params):
                 params.pop('country', None)
                 params.pop('category', None)
@@ -145,13 +145,13 @@ class NewsFetcher:
             
             params = {
                 'q': query,
-                'from_param': from_date.strftime('%Y-%m-%d'),
+                'from': from_date.strftime('%Y-%m-%d'),
                 'to': to_date.strftime('%Y-%m-%d'),
                 'sources': sources or self.sources,
                 'domains': domains,
                 'language': self.language,
-                'sort_by': sort_by,
-                'page_size': page_size or self.page_size
+                'sortBy': sort_by,
+                'pageSize': page_size or self.page_size
             }
             
             # Remove None values

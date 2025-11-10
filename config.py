@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     database_path: str = "./data/news_cache.db"
     
     # News API Configuration
-    news_api_sources: str = ""
+    news_api_sources: str = "bbc-news,cnn,reuters,the-verge,techcrunch,wired"
     news_api_language: str = "en"
     news_api_page_size: int = 20
     
