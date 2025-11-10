@@ -31,7 +31,12 @@ def render_qa_summary():
     with col1:
         max_articles = st.slider("Max Articles to Use", 1, 10, 5, key="qa_max_articles")
     with col2:
-        st.write("")  # Spacer
+        use_web_search = st.checkbox(
+            "Use Web Search",
+            value=True,
+            key="qa_web_search",
+            help="Use web search to enhance answers. Combines article context with web search results for more accurate definitions and background information."
+        )
     
     if st.button("❓ Generate Q&A Summary", type="primary", key="qa_button"):
         if not topic:
@@ -48,11 +53,12 @@ def render_qa_summary():
                     if st.session_state.summarization_pipeline is None:
                         st.session_state.summarization_pipeline = SummarizationPipeline()
                     
-                    # Generate Q&A summary
+                    # Generate Q&A summary with web search option
                     result = st.session_state.summarization_pipeline.summarize_with_questions(
                         topic=topic,
                         questions=questions,
-                        max_articles=max_articles
+                        max_articles=max_articles,
+                        use_web_search=use_web_search
                     )
                     
                     # Store in session

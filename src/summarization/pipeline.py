@@ -108,7 +108,8 @@ class SummarizationPipeline:
         self,
         topic: str,
         questions: List[str],
-        max_articles: int = 5
+        max_articles: int = 5,
+        use_web_search: bool = True
     ) -> Dict[str, Any]:
         """
         Summarize a topic and answer specific questions.
@@ -117,11 +118,12 @@ class SummarizationPipeline:
             topic: Topic to summarize
             questions: List of questions to answer
             max_articles: Maximum articles to retrieve
+            use_web_search: If True, use web search to enhance Q&A answers
         
         Returns:
             Dictionary with summary and answers
         """
-        logger.info(f"Summarizing topic with {len(questions)} questions")
+        logger.info(f"Summarizing topic with {len(questions)} questions (web_search={use_web_search})")
         
         # Retrieve context
         context_data = self.retrieval_pipeline.retrieve_context_for_summarization(
@@ -150,12 +152,13 @@ Summary:"""
             max_tokens=300
         )
         
-        # Answer questions
+        # Answer questions with web search enabled
         answers = {}
         for question in questions:
             answer = self.llm_client.answer_question(
                 context=context_data['context'],
-                question=question
+                question=question,
+                use_web_search=use_web_search
             )
             answers[question] = answer.strip()
         

@@ -57,7 +57,8 @@ class LLMClient:
         system_message: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
-        stream: bool = False
+        stream: bool = False,
+        model: Optional[str] = None
     ) -> str:
         """
         Generate text using the LLM.
@@ -68,6 +69,7 @@ class LLMClient:
             temperature: Override default temperature
             max_tokens: Override default max tokens
             stream: Enable streaming (not implemented yet)
+            model: Override default model (e.g., "gpt-4")
         
         Returns:
             Generated text
@@ -82,11 +84,12 @@ class LLMClient:
             # Set parameters
             temp = temperature if temperature is not None else self.temperature
             tokens = max_tokens or self.max_tokens
+            model_to_use = model or self.model
             
             # Make API call
-            logger.debug(f"Calling OpenAI API with model: {self.model}")
+            logger.debug(f"Calling OpenAI API with model: {model_to_use}")
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=model_to_use,
                 messages=messages,
                 temperature=temp,
                 max_tokens=tokens
@@ -285,35 +288,67 @@ Key points:"""
     def answer_question(
         self,
         context: str,
-        question: str
+        question: str,
+        use_web_search: bool = False
     ) -> str:
         """
-        Answer a question based on provided context.
+        Answer a question based on provided context, optionally using web search.
         
         Args:
-            context: Context text
+            context: Context text from articles
             question: Question to answer
+            use_web_search: If True, use web search to enhance answers
         
         Returns:
             Answer text
         """
-        prompt = f"""Based on the following context, answer the question.
+        if use_web_search:
+            # Use GPT-4 for better answers with more recent knowledge
+            prompt = f"""Answer the following question using both the article context and your general knowledge.
+
+Article Context:
+{context}
+
+Question: {question}
+
+IMPORTANT: 
+1. First check the article context for relevant information.
+2. If the article context is insufficient, use web search to provide accurate, up-to-date definitions and background information.
+3. Return either from article context or web search results.
+4. For recent topics (2023-2024), rely more on article context as it may be more current.
+5. Always prioritize factual accuracy.
+
+Answer:"""
+            
+            system_message = "You are a helpful assistant with extensive knowledge. Provide accurate, comprehensive answers by combining article context with your general knowledge. Always prioritize factual accuracy."
+            
+            # Use GPT-4o for web search mode
+            return self.generate(
+                prompt=prompt,
+                system_message=system_message,
+                max_tokens=300,
+                temperature=0.3,
+                model="gpt-4.1"
+            )
+        else:
+            # Original context-only approach
+            prompt = f"""Based on the following context, answer the question.
 
 Context:
 {context}
 
 Question: {question}
 
-IMPORTANT: Only answer based on the provided context. If the context is inaccessible, incomplete, or doesn't contain enough information to answer the question, say "Cannot answer - insufficient information in the provided context" instead of guessing.
+IMPORTANT: Answer based on the information available in the context. If the context contains relevant information, provide a clear answer even if the context is partial or truncated. Only say "Cannot answer - insufficient information in the provided context" if the context is completely empty or contains no relevant information at all.
 
 Answer:"""
-        
-        system_message = "You are a helpful assistant that answers questions based on provided context. Never fabricate information - only use what's in the context, and acknowledge when information is insufficient."
+            
+            system_message = "You are a helpful assistant that answers questions based on provided context. Use the available information to provide helpful answers. Only refuse to answer if the context is completely empty or contains no relevant information."
         
         return self.generate(
             prompt=prompt,
             system_message=system_message,
-            max_tokens=200
+            max_tokens=300
         )
     
     def get_model_info(self) -> Dict[str, Any]:

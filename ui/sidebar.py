@@ -31,6 +31,11 @@ def check_api_keys():
 #         return 0, str(e)
 
 
+def get_selected_model():
+    """Get the currently selected LLM model from session state."""
+    return st.session_state.get('llm_model', 'gpt-3.5-turbo')
+
+
 def render_sidebar():
     st.sidebar.title("⚙️ Configuration")
     
@@ -70,7 +75,20 @@ def render_sidebar():
     
     # LLM Settings
     with st.sidebar.expander("🤖 LLM Settings"):
-        st.write(f"**Model:** {settings.llm_model}")
+        # Model selection
+        model_options = ["gpt-3.5-turbo", "gpt-4.1"]
+        current_model = settings.llm_model if settings.llm_model in model_options else "gpt-3.5-turbo"
+        
+        selected_model = st.selectbox(
+            "Model",
+            options=model_options,
+            index=model_options.index(current_model),
+            help="Select the OpenAI model to use. GPT-4.1 is more capable but more expensive."
+        )
+        
+        # Store in session state for use across the app
+        st.session_state.llm_model = selected_model
+        
         st.write(f"**Temperature:** {settings.llm_temperature}")
         st.write(f"**Max Tokens:** {settings.llm_max_tokens}")
     

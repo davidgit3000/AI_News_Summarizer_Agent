@@ -8,6 +8,7 @@ from src.retrieval.pipeline import RetrievalPipeline
 from src.summarization.pipeline import SummarizationPipeline
 from src.validation.pipeline import ValidationPipeline
 from ui.components.validation_display import render_validation_results
+from ui.sidebar import get_selected_model
 from dateutil import parser
 
 
@@ -183,7 +184,7 @@ def render_article_summary():
             with st.spinner("Generating summary..."):
                 try:
                     if st.session_state.summarization_pipeline is None:
-                        st.session_state.summarization_pipeline = SummarizationPipeline()
+                        st.session_state.summarization_pipeline = SummarizationPipeline(llm_model=get_selected_model())
                     
                     # Use the article content directly
                     content = article.get('content') or article.get('description', '')
@@ -343,7 +344,7 @@ def render_article_summary():
                 with st.spinner(f"Answering {len(questions)} questions..."):
                     try:
                         if st.session_state.summarization_pipeline is None:
-                            st.session_state.summarization_pipeline = SummarizationPipeline()
+                            st.session_state.summarization_pipeline = SummarizationPipeline(llm_model=get_selected_model())
                         
                         content = article.get('content') or article.get('description', '')
                         
@@ -357,7 +358,8 @@ def render_article_summary():
                             for i, question in enumerate(questions, 1):
                                 answer = st.session_state.summarization_pipeline.llm_client.answer_question(
                                     context=content,
-                                    question=question
+                                    question=question,
+                                    use_web_search=True
                                 )
                                 
                                 with st.expander(f"**Q{i}: {question}**", expanded=True):

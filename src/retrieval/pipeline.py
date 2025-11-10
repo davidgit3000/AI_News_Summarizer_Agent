@@ -249,7 +249,7 @@ class RetrievalPipeline:
         """
         # Retrieve relevant articles with minimum similarity threshold
         # Use lower threshold for broad queries, higher for specific ones
-        min_sim = 0.2 if len(topic.split()) <= 1 else 0.4
+        min_sim = 0.2 if len(topic.split()) <= 1 else 0.35
         articles = self.retrieve_for_query(
             query=topic,
             top_k=max_articles,
@@ -271,12 +271,17 @@ class RetrievalPipeline:
         for i, article in enumerate(articles, 1):
             metadata = article['metadata']
             
-            # Format article
+            # Format article - use more content for better Q&A
+            # Limit to ~1500 chars per article to fit within token limits
+            content = article['document'][:1500]
+            if len(article['document']) > 1500:
+                content += "..."
+            
             article_text = f"""
                 Article {i}:
                 Title: {metadata.get('title', 'Untitled')}
                 Source: {metadata.get('source', 'Unknown')}
-                Content: {article['document'][:500]}...
+                Content: {content}
                 URL: {metadata.get('url', 'N/A')}
                 """
             context_parts.append(article_text.strip())
