@@ -186,7 +186,7 @@ Write as if explaining to a 10-year-old:
 
 {text}
 
-IMPORTANT: If the article content is inaccessible, incomplete, or requires a subscription, simply say "The article cannot be accessed" instead of making up information.
+IMPORTANT: If the article content is inaccessible or requires a subscription (NOT just truncated), clearly state "Article content unavailable" or "Subscription required" instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
 
 Simple explanation:"""
             system_message = "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms. Never make up information - if content is unavailable, say so."
@@ -232,7 +232,7 @@ Summary:"""
 
 {combined_text}
 
-IMPORTANT: If any article content is inaccessible, incomplete, or requires a subscription, note which articles are unavailable instead of fabricating information.
+IMPORTANT: If any article content is inaccessible, incomplete, or requires a subscription, note which articles are unavailable instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
 
 Combined summary:"""
             
@@ -322,11 +322,11 @@ Answer:"""
             
             system_message = "You are a helpful assistant with extensive knowledge. Provide accurate, comprehensive answers by combining article context with your general knowledge. Always prioritize factual accuracy."
             
-            # Use GPT-4o for web search mode
+            # Use GPT-4.1 for web search mode
             return self.generate(
                 prompt=prompt,
                 system_message=system_message,
-                max_tokens=300,
+                max_tokens=500,  # Increased for more complete responses
                 temperature=0.3,
                 model="gpt-4.1"
             )
@@ -348,7 +348,7 @@ Answer:"""
         return self.generate(
             prompt=prompt,
             system_message=system_message,
-            max_tokens=300
+            max_tokens=500  # Increased for more complete responses
         )
     
     def get_model_info(self) -> Dict[str, Any]:

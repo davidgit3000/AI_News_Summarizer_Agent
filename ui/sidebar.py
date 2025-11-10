@@ -76,14 +76,14 @@ def render_sidebar():
     # LLM Settings
     with st.sidebar.expander("🤖 LLM Settings"):
         # Model selection
-        model_options = ["gpt-3.5-turbo", "gpt-4.1"]
+        model_options = ["gpt-3.5-turbo", "gpt-4.1", "gpt-4.1-mini"]
         current_model = settings.llm_model if settings.llm_model in model_options else "gpt-3.5-turbo"
         
         selected_model = st.selectbox(
             "Model",
             options=model_options,
             index=model_options.index(current_model),
-            help="Select the OpenAI model to use. GPT-4.1 is more capable but more expensive."
+            help="Select the OpenAI model to use. GPT-4.1 models are newer and more capable but more expensive."
         )
         
         # Store in session state for use across the app

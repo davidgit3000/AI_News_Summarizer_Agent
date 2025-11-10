@@ -359,7 +359,7 @@ def render_article_summary():
                                 answer = st.session_state.summarization_pipeline.llm_client.answer_question(
                                     context=content,
                                     question=question,
-                                    use_web_search=True
+                                    use_web_search= True if st.session_state.llm_model == 'gpt-4.1' else False
                                 )
                                 
                                 with st.expander(f"**Q{i}: {question}**", expanded=True):
