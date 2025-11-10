@@ -3,7 +3,6 @@ Sidebar component for the AI News Summarizer application.
 """
 
 import streamlit as st
-from src.database.db_factory import get_database_manager
 from config import get_settings
 
 
