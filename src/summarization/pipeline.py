@@ -350,6 +350,8 @@ Headline:"""
 Articles:
 {context}
 
+IMPORTANT: If any article content is inaccessible or requires a subscription (NOT just truncated), note which articles are unavailable instead of fabricating information. If articles are truncated but have substantial content, summarize what's available.
+
 Summary (bullet points):"""
         
         elif style == "concise":
@@ -359,25 +361,33 @@ Synthesize the information into a cohesive narrative, not a list of articles.
 Articles:
 {context}
 
+IMPORTANT: If any article content is inaccessible or requires a subscription (NOT just truncated), note which articles are unavailable instead of fabricating information. If articles are truncated but have substantial content, summarize what's available.
+
 Concise summary:"""
         
         elif style == "executive":
             return f"""Based on the following articles about {topic}, provide an executive summary (max {max_length} words).
-Focus on business impact, key decisions, strategic implications, and actionable insights.
+Focus on business impact, key decisions, strategic implications, and actionable insights WHERE APPLICABLE.
+If the articles don't contain explicit business insights, summarize the key information in an executive style.
 Synthesize the information into a cohesive narrative.
 
 Articles:
 {context}
+
+IMPORTANT: If any article content is inaccessible or requires a subscription (NOT just truncated), note which articles are unavailable instead of fabricating information. If articles are truncated but have substantial content, summarize what's available. If articles lack business-specific content, still provide a summary in executive style.
 
 Executive summary:"""
         
         elif style == "technical":
             return f"""Based on the following articles about {topic}, provide a technical summary (max {max_length} words).
-Include technical details, methodologies, specifications, and key technical insights.
+Include technical details, methodologies, specifications, and key technical insights WHERE AVAILABLE.
+If the articles don't contain deep technical content, summarize the available information in a technical style.
 Synthesize the information into a cohesive narrative.
 
 Articles:
 {context}
+
+IMPORTANT: If any article content is inaccessible or requires a subscription (NOT just truncated), note which articles are unavailable instead of fabricating information. If articles are truncated but have substantial content, summarize what's available. If articles lack technical depth, still provide a summary in technical style.
 
 Technical summary:"""
         
@@ -385,9 +395,12 @@ Technical summary:"""
             return f"""Based on the following articles about {topic}, explain the topic in very simple terms (max {max_length} words).
 Use short sentences (under 15 words each), simple everyday words, and avoid technical jargon.
 Write as if explaining to a 10-year-old.
+Even if the articles are complex or incomplete, do your best to explain the main idea simply.
 
 Articles:
 {context}
+
+IMPORTANT: If any article content is completely inaccessible or requires a subscription, note which articles are unavailable instead of fabricating information. If articles have some content, explain it simply.
 
 Simple explanation:"""
         
@@ -398,23 +411,25 @@ Synthesize the information into a cohesive narrative, not a list of articles.
 Articles:
 {context}
 
+IMPORTANT: If any article content is inaccessible or requires a subscription (NOT just truncated), note which articles are unavailable instead of fabricating information. If articles are truncated but have substantial content, summarize what's available.
+
 Comprehensive summary:"""
     
     def _get_system_message(self, style: str) -> str:
         """Get system message based on style."""
         
         if style == "bullet_points":
-            return "You are a professional news analyst. Summarize information in clear bullet points."
+            return "You are a professional news analyst. Summarize information in clear bullet points. Never fabricate information - if content is unavailable, acknowledge it."
         elif style == "concise":
-            return "You are a professional news summarizer. Provide concise, accurate summaries."
+            return "You are a professional news summarizer. Provide concise, accurate summaries. Never fabricate information - if content is unavailable, say so."
         elif style == "executive":
-            return "You are a business analyst. Provide executive summaries focused on strategic impact and business value."
+            return "You are a business analyst. Provide executive summaries focused on strategic impact and business value where applicable. If content lacks business details, still provide a summary in executive style. Never fabricate information - if content is unavailable, acknowledge it."
         elif style == "technical":
-            return "You are a technical analyst. Provide detailed technical summaries with specific methodologies and technical details."
+            return "You are a technical analyst. Provide technical summaries with methodologies and technical details where available. If content lacks technical depth, still provide a summary in technical style. Never fabricate information - if content is unavailable, say so."
         elif style == "eli5":
-            return "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms."
+            return "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms. Even if content is limited, explain what's available simply. Never make up information - if content is completely unavailable, say so."
         else:  # comprehensive
-            return "You are a professional news analyst. Provide comprehensive, well-structured summaries."
+            return "You are a professional news analyst. Provide comprehensive, well-structured summaries. Never fabricate information - if content is unavailable, acknowledge it."
 
 
 # Example usage and testing

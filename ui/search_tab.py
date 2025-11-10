@@ -243,42 +243,87 @@ def render_article_summary():
             st.markdown("---")
             st.subheader("📊 Summary Validation")
             
-            with st.spinner("Running validation..."):
-                try:
-                    # from src.validation.pipeline import ValidationPipeline
-                    
-                    # Get stored summary and article
-                    summary = st.session_state.current_summary
-                    article = st.session_state.current_article_for_validation
-                    
-                    # Get article content
-                    article_content = article.get('content') or article.get('description', '')
-                    
-                    # Initialize validation pipeline with existing summarization pipeline
-                    if 'validation_pipeline' not in st.session_state or st.session_state.validation_pipeline is None:
-                        st.session_state.validation_pipeline = ValidationPipeline(
-                            summarization_pipeline=st.session_state.get('summarization_pipeline'),
-                            enable_fidelity_check=False
-                        )
-                    
-                    # Validate the summary
-                    validation_result = st.session_state.validation_pipeline.evaluate_summary(
-                        summary=summary,
-                        original_text=article_content,
-                        check_fidelity=False,
-                        source_articles=None
-                    )
-                    
-                    # Display validation results using reusable component
-                    render_validation_results(validation_result, run_fidelity=False)
-                    
-                    # Reset validation flag
-                    if st.button("✅ Done", key="close_validation"):
-                        st.session_state.show_validation = False
-                        st.rerun()
+            # Check if summary indicates unavailable content
+            summary = st.session_state.current_summary
+            unavailable_indicators = [
+                'article content unavailable',
+                'content unavailable',
+                'subscription required',
+                'cannot be accessed',
+                'cannot access',
+                'article cannot be read',
+                'insufficient information',
+                'summary is unavailable',
+                'summary cannot be provided',
+                'cannot provide a',
+                'not accessible in its entirety',
+                'provided text appears to be',
+                'limited information provided',
+                'i cannot provide',
+                "i'm sorry, but",
+                'content is not accessible',
+                'content provided is not relevant',
+                'is unavailable',
+                'is not available',
+                'summary of the article is unavailable',
+                'summary is not available',
+                "i'm unable to access",
+                'unable to access the content',
+                'may require a subscription',
+                'are not fully available',
+                'sorry, the articles about',
+                "sorry, i couldn't find",
+                'articles you provided are not available',
+                'articles provided are not available',
+                "i'm sorry, but the articles",
+                'sorry, but the articles',
+                'the content of the provided articles is not accessible.',
+            ]
+            
+            is_unavailable = any(indicator in summary.lower() for indicator in unavailable_indicators)
+            
+            if is_unavailable:
+                st.warning("⚠️ Cannot validate summary - article content is unavailable or inaccessible.")
+                st.info("💡 The model indicated that the article content could not be accessed. This may be due to subscription requirements, access restrictions, or content unavailability.")
                 
-                except Exception as e:
-                    st.error(f"❌ Validation error: {str(e)}")
+                # Reset validation flag
+                if st.button("✅ Done", key="close_validation_unavailable"):
+                    st.session_state.show_validation = False
+                    st.rerun()
+            else:
+                with st.spinner("Running validation..."):
+                    try:
+                        # Get stored summary and article
+                        article = st.session_state.current_article_for_validation
+                        
+                        # Get article content
+                        article_content = article.get('content') or article.get('description', '')
+                        
+                        # Initialize validation pipeline with existing summarization pipeline
+                        if 'validation_pipeline' not in st.session_state or st.session_state.validation_pipeline is None:
+                            st.session_state.validation_pipeline = ValidationPipeline(
+                                summarization_pipeline=st.session_state.get('summarization_pipeline'),
+                                enable_fidelity_check=False
+                            )
+                        
+                        # Validate the summary
+                        validation_result = st.session_state.validation_pipeline.evaluate_summary(
+                            summary=summary,
+                            original_text=article_content,
+                            check_fidelity=False,
+                            source_articles=None
+                        )
+                        
+                        # Display validation results using reusable component
+                        render_validation_results(validation_result, run_fidelity=False)
+                        
+                        # Reset validation flag
+                        if st.button("✅ Done", key="close_validation"):
+                            st.session_state.show_validation = False
+                            st.rerun()
+                    
+                    except Exception as e:
+                        st.error(f"❌ Validation error: {str(e)}")
     
     else:  # Ask Questions mode
         st.write("**Ask questions about this article:**")

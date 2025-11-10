@@ -125,22 +125,34 @@ class LLMClient:
         Returns:
             Summary text
         """
+        # Truncate text if too long to avoid context window issues
+        # GPT-3.5-turbo has 4K tokens (~3000 words), leave room for prompt and response
+        max_input_words = 2500
+        words = text.split()
+        if len(words) > max_input_words:
+            logger.warning(f"Text too long ({len(words)} words), truncating to {max_input_words} words")
+            text = ' '.join(words[:max_input_words]) + "\n\n[Article truncated due to length]"
+        
         # Build prompt based on style
         if style == "bullet_points":
             prompt = f"""Summarize the following text in bullet points (max {max_length} words):
 
 {text}
 
+IMPORTANT: If the article content is inaccessible or requires a subscription (NOT just truncated), clearly state "Article content unavailable" or "Subscription required" instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
+
 Summary (bullet points):"""
-            system_message = "You are a professional news analyst. Summarize information in clear bullet points."
+            system_message = "You are a professional news analyst. Summarize information in clear bullet points. Never fabricate information - if content is unavailable, say so."
         
         elif style == "comprehensive" or style == "detailed":
             prompt = f"""Provide a detailed, comprehensive summary of the following text (max {max_length} words):
 
 {text}
 
+IMPORTANT: If the article content is inaccessible or requires a subscription (NOT just truncated), clearly state "Article content unavailable" or "Subscription required" instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
+
 Comprehensive summary:"""
-            system_message = "You are a professional news analyst. Provide comprehensive, well-structured summaries."
+            system_message = "You are a professional news analyst. Provide comprehensive, well-structured summaries. Never fabricate information - if content is unavailable, say so."
         
         elif style == "executive":
             prompt = f"""Provide an executive summary of the following text (max {max_length} words).
@@ -148,8 +160,10 @@ Focus on business impact, key decisions, strategic implications, and actionable 
 
 {text}
 
+IMPORTANT: If the article content is inaccessible or requires a subscription (NOT just truncated), clearly state "Article content unavailable" or "Subscription required" instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
+
 Executive summary:"""
-            system_message = "You are a business analyst. Provide executive summaries focused on strategic impact and business value."
+            system_message = "You are a business analyst. Provide executive summaries focused on strategic impact and business value. Never fabricate information - if content is unavailable, say so."
         
         elif style == "technical":
             prompt = f"""Provide a technical summary of the following text (max {max_length} words).
@@ -157,8 +171,10 @@ Include technical details, methodologies, specifications, and key technical insi
 
 {text}
 
+IMPORTANT: If the article content is inaccessible or requires a subscription (NOT just truncated), clearly state "Article content unavailable" or "Subscription required" instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
+
 Technical summary:"""
-            system_message = "You are a technical analyst. Provide detailed technical summaries with specific methodologies and technical details."
+            system_message = "You are a technical analyst. Provide detailed technical summaries with specific methodologies and technical details. Never fabricate information - if content is unavailable, say so."
         
         elif style == "eli5":
             prompt = f"""Explain the following text in very simple terms (max {max_length} words).
@@ -167,16 +183,20 @@ Write as if explaining to a 10-year-old:
 
 {text}
 
+IMPORTANT: If the article content is inaccessible, incomplete, or requires a subscription, simply say "The article cannot be accessed" instead of making up information.
+
 Simple explanation:"""
-            system_message = "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms."
+            system_message = "You are an expert at explaining complex topics simply. Use short sentences, simple words, and everyday language. Avoid jargon and technical terms. Never make up information - if content is unavailable, say so."
         
         else:  # concise (default)
             prompt = f"""Provide a concise summary of the following text (max {max_length} words):
 
 {text}
 
+IMPORTANT: If the article content is inaccessible or requires a subscription (NOT just truncated), clearly state "Article content unavailable" or "Subscription required" instead of fabricating information. If the article is truncated but has substantial content, summarize what's available.
+
 Summary:"""
-            system_message = "You are a professional news summarizer. Provide accurate, concise summaries."
+            system_message = "You are a professional news summarizer. Provide accurate, concise summaries. Never fabricate information - if content is unavailable, say so."
         
         return self.generate(
             prompt=prompt,
@@ -209,9 +229,11 @@ Summary:"""
 
 {combined_text}
 
+IMPORTANT: If any article content is inaccessible, incomplete, or requires a subscription, note which articles are unavailable instead of fabricating information.
+
 Combined summary:"""
             
-            system_message = "You are a professional news summarizer. Synthesize multiple articles into one clear summary."
+            system_message = "You are a professional news summarizer. Synthesize multiple articles into one clear summary. Never fabricate information - if content is unavailable, acknowledge it."
             
             return self.generate(
                 prompt=prompt,
@@ -282,9 +304,11 @@ Context:
 
 Question: {question}
 
+IMPORTANT: Only answer based on the provided context. If the context is inaccessible, incomplete, or doesn't contain enough information to answer the question, say "Cannot answer - insufficient information in the provided context" instead of guessing.
+
 Answer:"""
         
-        system_message = "You are a helpful assistant that answers questions based on provided context."
+        system_message = "You are a helpful assistant that answers questions based on provided context. Never fabricate information - only use what's in the context, and acknowledge when information is insufficient."
         
         return self.generate(
             prompt=prompt,

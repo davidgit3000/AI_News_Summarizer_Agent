@@ -8,6 +8,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
 
 from src.ingestion.news_fetcher import NewsFetcher
+from src.ingestion.web_scraper import WebScraper
 from src.database.db_factory import get_database_manager
 from config import get_settings
 
@@ -22,7 +23,8 @@ class IngestionPipeline:
     def __init__(
         self,
         news_api_key: Optional[str] = None,
-        db_path: Optional[str] = None
+        db_path: Optional[str] = None,
+        enable_web_scraping: bool = True
     ):
         """
         Initialize the ingestion pipeline.
@@ -30,12 +32,15 @@ class IngestionPipeline:
         Args:
             news_api_key: NewsAPI key (optional, uses config if not provided)
             db_path: Database path (optional, uses config if not provided)
+            enable_web_scraping: Whether to scrape full content from URLs (default: True)
         """
         self.fetcher = NewsFetcher(api_key=news_api_key)
+        self.scraper = WebScraper() if enable_web_scraping else None
         self.db = get_database_manager()
         self.settings = get_settings()
+        self.enable_web_scraping = enable_web_scraping
         
-        logger.info("IngestionPipeline initialized successfully")
+        logger.info(f"IngestionPipeline initialized (web scraping: {enable_web_scraping})")
     
     def ingest_top_headlines(
         self,
@@ -66,6 +71,10 @@ class IngestionPipeline:
                 category=category,
                 page_size=page_size
             )
+            
+            # Enrich with full content if web scraping is enabled
+            if self.enable_web_scraping and self.scraper:
+                articles = self._enrich_articles_with_full_content(articles)
             
             # Store in database
             inserted, duplicates = self.db.insert_articles_batch(articles)
@@ -110,6 +119,10 @@ class IngestionPipeline:
                 days_back=days_back,
                 max_results=max_results
             )
+            
+            # Enrich with full content if web scraping is enabled
+            if self.enable_web_scraping and self.scraper:
+                articles = self._enrich_articles_with_full_content(articles)
             
             # Store in database
             inserted, duplicates = self.db.insert_articles_batch(articles)
@@ -164,6 +177,10 @@ class IngestionPipeline:
                 sort_by=sort_by,
                 page_size=page_size
             )
+            
+            # Enrich with full content if web scraping is enabled
+            if self.enable_web_scraping and self.scraper:
+                articles = self._enrich_articles_with_full_content(articles)
             
             # Store in database
             inserted, duplicates = self.db.insert_articles_batch(articles)
@@ -264,6 +281,54 @@ class IngestionPipeline:
         }
         
         return status
+    
+    def _enrich_articles_with_full_content(self, articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Enrich articles with full content scraped from URLs.
+        
+        Args:
+            articles: List of articles from NewsAPI
+        
+        Returns:
+            Articles with enriched content
+        """
+        enriched_articles = []
+        scraped_count = 0
+        failed_count = 0
+        
+        for article in articles:
+            # Check if content needs enrichment
+            current_content = article.get('content', '')
+            
+            if self.scraper.is_content_truncated(current_content) and article.get('url'):
+                logger.info(f"Scraping full content from: {article.get('url')}")
+                
+                # Scrape full content
+                result = self.scraper.fetch_article_content(article['url'])
+                
+                if result['status'] == 'success' and result['content']:
+                    # Replace truncated content with full content
+                    article['content'] = result['content']
+                    scraped_count += 1
+                    logger.info(f"✅ Scraped {len(result['content'])} chars")
+                else:
+                    # Keep original content and log the issue
+                    failed_count += 1
+                    error_msg = result.get('error', 'Unknown error')
+                    logger.warning(f"⚠️ Could not scrape: {error_msg}")
+                    
+                    # Add a note to the content about scraping failure
+                    if result['status'] == 'forbidden':
+                        article['content'] = f"[Subscription required to access full article]\n\n{current_content}"
+                    elif result['status'] in ['timeout', 'http_error', 'error']:
+                        article['content'] = f"[Full article unavailable - {error_msg}]\n\n{current_content}"
+            
+            enriched_articles.append(article)
+        
+        if scraped_count > 0 or failed_count > 0:
+            logger.info(f"Content enrichment: {scraped_count} scraped, {failed_count} failed, {len(articles) - scraped_count - failed_count} skipped")
+        
+        return enriched_articles
 
 
 # Example usage and testing
