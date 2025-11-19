@@ -73,6 +73,16 @@ def render_validation_results(validation_result: Dict[str, Any], run_fidelity: b
             
             fidelity = validation_result['fidelity']
             
+            # Check if content was blocked by Gemini
+            if fidelity.get('blocked', False):
+                st.warning("⚠️ **Sensitive Content Detected**")
+                st.info(
+                    f"🛡️ {fidelity.get('block_message', 'This content was flagged as potentially sensitive by Gemini safety filters.')}\n\n"
+                    f"**Block Reason:** {fidelity.get('block_reason', 'UNKNOWN')}\n\n"
+                    "**Note:** Fidelity checking was skipped for this content. The summary quality metrics above are still valid."
+                )
+                st.markdown("---")
+            
             col1, col2, col3 = st.columns(3)
             col1.metric(
                 "Overall Fidelity", 

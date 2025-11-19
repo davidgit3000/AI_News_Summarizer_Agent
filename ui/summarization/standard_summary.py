@@ -7,7 +7,9 @@ from contextlib import nullcontext
 from src.summarization.pipeline import SummarizationPipeline
 from src.validation.pipeline import ValidationPipeline
 from ui.components.validation_display import render_validation_results
+import logging
 
+logger = logging.getLogger(__name__)
 
 def render_standard_summary():
     """Render the standard summarization interface with validation."""
@@ -215,6 +217,7 @@ def _display_validation_section(result: dict):
                     if not source_texts and result.get('sources'):
                         source_texts = [s.get('title', '') for s in result['sources']]
                     combined_sources = "\n\n".join(source_texts)
+                    logger.info(f"Combined sources: {combined_sources}")
                     
                     # Validate the summary
                     validation_result = st.session_state.validation_pipeline.evaluate_summary(

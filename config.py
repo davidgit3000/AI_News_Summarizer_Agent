@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     
     # Retrieval Configuration
     top_k_results: int = 5
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.5
     
     # Application Settings
     debug: bool = False

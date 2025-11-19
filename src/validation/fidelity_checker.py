@@ -28,7 +28,7 @@ class FidelityChecker:
         
         Args:
             api_key: Gemini API key (uses config if None)
-            model_name: Gemini model to use (gemini-2.5-flash)
+            model_name: Gemini model to use
         """
         settings = get_settings()
         
@@ -43,6 +43,7 @@ class FidelityChecker:
         # Initialize model
         self.model_name = model_name
         self.model = genai.GenerativeModel(model_name)
+        logger.info(f"Using Gemini model: {model_name}")
         
         logger.info(f"FidelityChecker initialized with model: {self.model_name}")
     
@@ -74,6 +75,21 @@ class FidelityChecker:
         try:
             # Call Gemini
             response = self.model.generate_content(prompt)
+            logger.info(f"Response prompt_feedback: {response.prompt_feedback}")
+            logger.info(f"Response candidates: {len(response.candidates) if hasattr(response, 'candidates') else 'N/A'}")
+            
+            # Check if prompt was blocked
+            if not response.candidates or len(response.candidates) == 0:
+                block_reason = response.prompt_feedback.block_reason if hasattr(response.prompt_feedback, 'block_reason') else 'UNKNOWN'
+                logger.warning(f"Gemini blocked the prompt. Reason: {block_reason}")
+                return {
+                    'error': f'Content blocked by Gemini safety filters',
+                    'overall_fidelity': 0.0,
+                    'factual_consistency': 0.0,
+                    'blocked': True,
+                    'block_reason': str(block_reason),
+                    'block_message': 'This content was flagged as potentially sensitive by Gemini\'s safety filters.'
+                }
             
             # Parse response
             result = self._parse_fidelity_response(response.text)
@@ -137,6 +153,20 @@ Respond in JSON format:
         
         try:
             response = self.model.generate_content(prompt)
+            
+            # Check if prompt was blocked
+            if not response.candidates or len(response.candidates) == 0:
+                block_reason = response.prompt_feedback.block_reason if hasattr(response.prompt_feedback, 'block_reason') else 'UNKNOWN'
+                logger.warning(f"Gemini blocked the prompt. Reason: {block_reason}")
+                return {
+                    'error': f'Content blocked by Gemini safety filters',
+                    'hallucination_count': 0,
+                    'has_hallucinations': None,
+                    'blocked': True,
+                    'block_reason': str(block_reason),
+                    'block_message': 'This content was flagged as potentially sensitive by Gemini\'s safety filters.'
+                }
+            
             result = self._parse_json_response(response.text)
             
             logger.info(f"Hallucination check: {result.get('hallucination_count', 0)} found")
@@ -200,6 +230,21 @@ Respond in JSON format:
         
         try:
             response = self.model.generate_content(prompt)
+
+            # Check if prompt was blocked
+            if not response.candidates or len(response.candidates) == 0:
+                block_reason = response.prompt_feedback.block_reason if hasattr(response.prompt_feedback, 'block_reason') else 'UNKNOWN'
+                logger.warning(f"Gemini blocked the prompt. Reason: {block_reason}")
+                return {
+                    'error': f'Content blocked by Gemini safety filters',
+                    'total_claims': 0,
+                    'verified_claims': 0,
+                    'unverified_claims': 0,
+                    'blocked': True,
+                    'block_reason': str(block_reason),
+                    'block_message': 'This content was flagged as potentially sensitive by Gemini\'s safety filters.'
+                }
+            
             result = self._parse_json_response(response.text)
             
             logger.info(f"Claim verification: {result.get('verified_claims', 0)}/{result.get('total_claims', 0)} verified")
@@ -258,6 +303,19 @@ Respond in JSON format:
         
         try:
             response = self.model.generate_content(prompt)
+            
+            # Check if prompt was blocked
+            if not response.candidates or len(response.candidates) == 0:
+                block_reason = response.prompt_feedback.block_reason if hasattr(response.prompt_feedback, 'block_reason') else 'UNKNOWN'
+                logger.warning(f"Gemini blocked the prompt. Reason: {block_reason}")
+                return {
+                    'error': f'Content blocked by Gemini safety filters',
+                    'completeness_score': 0.0,
+                    'blocked': True,
+                    'block_reason': str(block_reason),
+                    'block_message': 'This content was flagged as potentially sensitive by Gemini\'s safety filters.'
+                }
+            
             result = self._parse_json_response(response.text)
             
             logger.info(f"Completeness: {result.get('completeness_score', 0):.2f}")

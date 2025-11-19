@@ -87,9 +87,10 @@ class PineconeStore:
                 'published_at': article.get('published_at', ''),
             }
             
-            # Add description if available (truncate to fit metadata limits)
-            if article.get('description'):
-                metadata['description'] = article['description'][:1000]
+            # Add content if available (truncate to fit metadata limits)
+            if article.get('content'):
+                logger.info(f"Article content: {article['content'][:100]}...")
+                metadata['content'] = article['content']
             
             vectors.append({
                 'id': str(article['id']),
@@ -136,7 +137,7 @@ class PineconeStore:
         # Format results to match ChromaDB format
         matches = []
         for match in results['matches']:
-            similarity = match['score']
+            similarity = match['score'] # score will be determined by Pinecone's cosine similarity (0-1 range, higher is more similar)
             
             if similarity < min_similarity:
                 continue
@@ -147,14 +148,15 @@ class PineconeStore:
             matches.append({
                 'id': match['id'],
                 'similarity': similarity,
-                'document': metadata.get('title', '') + ' ' + metadata.get('description', ''),
+                'document': metadata.get('content', ''),
                 'metadata': metadata
             })
-        
+
         # Log similarity scores for debugging
         if matches:
             sample_scores = [f"{m['id']}:{m['similarity']:.3f}" for m in matches[:3]]
             logger.info(f"Found {len(matches)} matches (min_similarity={min_similarity}), sample scores: {sample_scores}")
+            logger.info(f"Sample match: {matches[0]}")  # Log the first match object
         else:
             logger.info(f"Found 0 matches (min_similarity={min_similarity})")
         
