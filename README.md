@@ -19,6 +19,22 @@ An end-to-end AI system that:
 - ✅ **Validates** quality with Gemini fidelity checking
 - ✅ **Presents** insights via beautiful Streamlit UI
 
+## Demo Screenshots
+1) Overview of the Home page
+<img width="3024" height="1618" alt="image" src="https://github.com/user-attachments/assets/04c23df2-4764-47d3-862b-9f2a40fde6e2" />
+
+2) Fetch news about the topic "artificial intelligence" or AI
+<img width="2296" height="1518" alt="image" src="https://github.com/user-attachments/assets/404c5cac-cd3b-46d0-aa51-467dada483d9" />
+
+3) Search and summarize all articles about the topic "superintelligent AI"
+<img width="2280" height="1330" alt="image" src="https://github.com/user-attachments/assets/98bffc7c-e68d-4f92-95eb-86b0f15fab99" />
+
+4) Summarization result with sources below
+<img width="2280" height="1508" alt="image" src="https://github.com/user-attachments/assets/35a6b7e5-bb0b-482c-b326-d7dd97e722d0" />
+
+5) Summary Validation and Fidelity Analysis (done by Google's Gemini)
+<img width="2352" height="1514" alt="image" src="https://github.com/user-attachments/assets/550a463a-b065-4242-94dd-8f751a76bc40" />
+
 ## 🏗️ Architecture
 
 ```
