@@ -7,6 +7,7 @@ import logging
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
 import requests
+from urllib.parse import quote
 
 from config import get_settings
 
@@ -36,7 +37,8 @@ class NewsFetcher:
         self.base_url = "https://newsapi.org/v2"
         self.language = settings.news_api_language
         self.page_size = settings.news_api_page_size
-        self.sources = settings.news_api_sources
+        # self.sources = settings.news_api_sources  # Commented out to search all sources
+        self.sources = None  # Set to None to search all available sources
         
         logger.info("NewsFetcher initialized successfully")
     
@@ -52,8 +54,10 @@ class NewsFetcher:
         Fetch top headlines from NewsAPI.
         
         Args:
-            query: Keywords or phrases to search for
-            sources: Comma-separated news sources (e.g., 'bbc-news,cnn')
+            query: Keywords or phrases to search for. Use quotes for exact phrases (e.g., '"climate change"')
+                   or boolean operators (e.g., 'bitcoin AND ethereum')
+            sources: Comma-separated news sources (e.g., 'bbc-news,cnn'). 
+                   If None, searches all available sources.
             category: Category (business, entertainment, general, health, science, sports, technology)
             country: 2-letter ISO country code (e.g., 'us', 'gb')
             page_size: Number of results to return (max 100)
@@ -63,11 +67,11 @@ class NewsFetcher:
         """
         try:
             # Use sources from parameter, or fall back to config if not provided
-            # But only if config has actual sources (not empty string)
-            sources_to_use = sources if sources else (self.sources if self.sources else None)
+            # If both are None, NewsAPI will search all available sources
+            sources_to_use = sources if sources else self.sources
             
             params = {
-                'q': query,
+                'q': query,  # requests library will handle URL encoding automatically
                 'sources': sources_to_use,
                 'category': category,
                 'country': country,
@@ -125,10 +129,15 @@ class NewsFetcher:
         Search through millions of articles from NewsAPI.
         
         Args:
-            query: Keywords or phrases to search for (required)
+            query: Keywords or phrases to search for (required). 
+                   Tips for better results:
+                   - Use quotes for exact phrases: '"climate change"'
+                   - Use + for required words: '+bitcoin'
+                   - Use - to exclude: '-bitcoin'
+                   - Use AND/OR/NOT operators: 'crypto AND (ethereum OR litecoin) NOT bitcoin'
             from_date: Oldest article date
             to_date: Newest article date
-            sources: Comma-separated news sources
+            sources: Comma-separated news sources. If None, searches all sources.
             domains: Comma-separated domains (e.g., 'bbc.co.uk,techcrunch.com')
             sort_by: Sort order ('relevancy', 'popularity', 'publishedAt')
             page_size: Number of results (max 100)
@@ -144,10 +153,10 @@ class NewsFetcher:
                 to_date = datetime.now()
             
             params = {
-                'q': query,
+                'q': query,  # requests library handles URL encoding
                 'from': from_date.strftime('%Y-%m-%d'),
                 'to': to_date.strftime('%Y-%m-%d'),
-                'sources': sources or self.sources,
+                'sources': sources if sources else self.sources,
                 'domains': domains,
                 'language': self.language,
                 'sortBy': sort_by,

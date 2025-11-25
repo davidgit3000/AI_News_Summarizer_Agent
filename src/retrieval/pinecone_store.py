@@ -4,11 +4,25 @@ Pinecone vector store implementation.
 
 import os
 import logging
+import json
 from typing import List, Dict, Any, Optional
 import numpy as np
 from pinecone import Pinecone, ServerlessSpec
 
 logger = logging.getLogger(__name__)
+
+
+def estimate_metadata_size(metadata: Dict[str, Any]) -> int:
+    """
+    Estimate the size of metadata in bytes.
+    
+    Args:
+        metadata: Metadata dictionary
+    
+    Returns:
+        Estimated size in bytes
+    """
+    return len(json.dumps(metadata).encode('utf-8'))
 
 
 class PineconeStore:
@@ -88,9 +102,28 @@ class PineconeStore:
             }
             
             # Add content if available (truncate to fit metadata limits)
+            # Pinecone has a 40KB limit per vector metadata
+            # Keep content short to leave room for other fields
             if article.get('content'):
-                logger.info(f"Article content: {article['content'][:100]}...")
-                metadata['content'] = article['content']
+                content = article['content']
+                # Truncate to ~10KB (10,000 chars) to be safe
+                # This leaves room for title, source, url, etc.
+                max_content_length = 10000
+                if len(content) > max_content_length:
+                    content = content[:max_content_length] + '...'
+                    logger.debug(f"Truncated content from {len(article['content'])} to {max_content_length} chars")
+                metadata['content'] = content
+            
+            # Validate metadata size (Pinecone limit is 40KB)
+            metadata_size = estimate_metadata_size(metadata)
+            if metadata_size > 40960:  # 40KB in bytes
+                logger.warning(f"Metadata size ({metadata_size} bytes) exceeds 40KB limit for article {article['id']}")
+                # Further truncate content if needed
+                if 'content' in metadata:
+                    # Reduce content by half and try again
+                    metadata['content'] = metadata['content'][:len(metadata['content'])//2] + '...'
+                    metadata_size = estimate_metadata_size(metadata)
+                    logger.info(f"Reduced metadata size to {metadata_size} bytes")
             
             vectors.append({
                 'id': str(article['id']),

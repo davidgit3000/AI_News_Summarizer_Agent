@@ -87,7 +87,7 @@ def render_search_tab():
                         st.session_state.search_query = search_query
                         st.success(f"✅ Found {len(articles)} articles!")
                     else:
-                        st.warning("⚠️ No articles found. Try a different search term.")
+                        st.warning("⚠️ No articles found. Try a different search term or adjust similarity threshold.")
                         st.session_state.search_results = None
                 
                 except Exception as e:
