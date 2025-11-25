@@ -9,6 +9,7 @@ An intelligent news aggregation and summarization system powered by **RAG (Retri
 ## 🎯 Project Overview
 
 An end-to-end AI system that:
+
 - ✅ **Fetches** latest news from NewsAPI
 - ✅ **Stores** articles in **Neon PostgreSQL** (cloud database)
 - ✅ **Vectorizes** content using Sentence Transformers
@@ -52,6 +53,7 @@ An end-to-end AI system that:
 ```
 
 **Pipeline Stages:**
+
 1. **Ingestion**: Fetch news from NewsAPI → Store in Neon PostgreSQL
 2. **Vectorization**: Generate embeddings (384-dim) → Index in Pinecone
 3. **Retrieval**: Semantic search using cosine similarity
@@ -61,21 +63,25 @@ An end-to-end AI system that:
 ## 🛠️ Tech Stack
 
 ### **Core Technologies**
+
 - **Python 3.13** - Modern Python with latest features
 - **Streamlit** - Interactive web UI with real-time updates
 
 ### **AI & ML**
+
 - **OpenAI GPT-3.5/GPT-4** - Advanced text summarization
 - **Google Gemini 2.5 Flash** - Fidelity checking and validation
 - **Sentence Transformers** - Text embeddings (`all-MiniLM-L6-v2`)
 - **ROUGE & NLTK** - Quality metrics
 
 ### **Databases**
+
 - **Neon PostgreSQL** - Serverless Postgres (cloud-hosted)
 - **Pinecone** - Managed vector database for semantic search
 - **SQLAlchemy** - ORM for database operations
 
 ### **APIs & Services**
+
 - **NewsAPI** - Real-time news data
 - **Pinecone API** - Vector similarity search
 - **OpenAI API** - LLM inference
@@ -84,6 +90,7 @@ An end-to-end AI system that:
 ## 📋 Prerequisites
 
 ### **Required**
+
 - Python 3.9+ (3.13 recommended)
 - [OpenAI API Key](https://platform.openai.com/api-keys)
 - [NewsAPI Key](https://newsapi.org/register)
@@ -91,6 +98,7 @@ An end-to-end AI system that:
 - [Pinecone Account](https://www.pinecone.io) (Free tier available)
 
 ### **Optional**
+
 - [Google Gemini API Key](https://ai.google.dev) (for fidelity checking)
 
 ## 🚀 Quick Start
@@ -117,11 +125,13 @@ pip install -r requirements.txt
 ### **2. Setup Cloud Services**
 
 #### **Neon PostgreSQL**
+
 1. Sign up at [neon.tech](https://neon.tech)
 2. Create a new project
 3. Copy your connection string (starts with `postgresql://`)
 
 #### **Pinecone**
+
 1. Sign up at [pinecone.io](https://www.pinecone.io)
 2. Create a new index:
    - **Name**: `news-summarizer`
@@ -143,6 +153,7 @@ nano .env  # or use your preferred editor
 ```
 
 **Required environment variables:**
+
 ```bash
 # Database
 DATABASE_URL=postgresql://user:pass@host.neon.tech/dbname?sslmode=require
@@ -178,7 +189,14 @@ The app will open at `http://localhost:8501` 🎉
 
 ### **6. First Steps in the UI**
 
-1. **Ingest Tab**: Click "Fetch Articles" to load news
+1. **Ingest Tab**:
+   - Choose fetch mode (Top Headlines, By Topic, or Everything)
+   - Use advanced query operators for precise searches:
+     - Exact phrases: `"artificial intelligence"`
+     - Boolean operators: `AI AND healthcare`, `(GPT OR ChatGPT) NOT hype`
+     - Required/excluded words: `+machine learning`, `AI -cryptocurrency`
+   - Set custom date ranges (Everything mode)
+   - Click "Fetch Articles" to load news
 2. **Summarize Tab**: Enter a topic (e.g., "AI") and generate summary
 3. **Search Tab**: Search articles semantically
 4. **Analytics Tab**: View insights and trends
@@ -235,27 +253,29 @@ AI_News_Summarizer_Agent/
 
 Edit `.env` to customize behavior:
 
-| Variable | Description | Default | Options |
-|----------|-------------|---------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Required | Neon connection string |
-| `VECTOR_STORE_TYPE` | Vector database to use | `pinecone` | `pinecone`, `chromadb` |
-| `PINECONE_API_KEY` | Pinecone API key | Required | From pinecone.io |
-| `PINECONE_INDEX_NAME` | Pinecone index name | `news-summarizer` | Custom name |
-| `LLM_MODEL` | OpenAI model for summaries | `gpt-3.5-turbo` | `gpt-4`, `gpt-3.5-turbo` |
-| `LLM_TEMPERATURE` | LLM creativity (0-1) | `0.3` | `0.0` - `1.0` |
-| `EMBEDDING_MODEL` | Sentence transformer model | `all-MiniLM-L6-v2` | Any SentenceTransformer |
-| `TOP_K_RESULTS` | Articles to retrieve | `5` | `1` - `50` |
-| `GEMINI_API_KEY` | Gemini API key (optional) | None | For fidelity checking |
+| Variable              | Description                  | Default            | Options                  |
+| --------------------- | ---------------------------- | ------------------ | ------------------------ |
+| `DATABASE_URL`        | PostgreSQL connection string | Required           | Neon connection string   |
+| `VECTOR_STORE_TYPE`   | Vector database to use       | `pinecone`         | `pinecone`, `chromadb`   |
+| `PINECONE_API_KEY`    | Pinecone API key             | Required           | From pinecone.io         |
+| `PINECONE_INDEX_NAME` | Pinecone index name          | `news-summarizer`  | Custom name              |
+| `LLM_MODEL`           | OpenAI model for summaries   | `gpt-3.5-turbo`    | `gpt-4`, `gpt-3.5-turbo` |
+| `LLM_TEMPERATURE`     | LLM creativity (0-1)         | `0.3`              | `0.0` - `1.0`            |
+| `EMBEDDING_MODEL`     | Sentence transformer model   | `all-MiniLM-L6-v2` | Any SentenceTransformer  |
+| `TOP_K_RESULTS`       | Articles to retrieve         | `5`                | `1` - `50`               |
+| `GEMINI_API_KEY`      | Gemini API key (optional)    | None               | For fidelity checking    |
 
 ### **Switching Between Vector Stores**
 
 **Use Pinecone (Recommended for production):**
+
 ```bash
 VECTOR_STORE_TYPE=pinecone
 PINECONE_API_KEY=your_key
 ```
 
 **Use ChromaDB (Local development):**
+
 ```bash
 VECTOR_STORE_TYPE=chromadb
 ```
@@ -263,19 +283,26 @@ VECTOR_STORE_TYPE=chromadb
 ## ✨ Features
 
 ### **📥 Ingestion**
-- Fetch latest news from NewsAPI
-- Automatic deduplication
-- Batch processing with progress tracking
-- Store in Neon PostgreSQL with full metadata
+
+- **Multi-mode fetching**: Top Headlines, By Topic, or Everything (Advanced Search)
+- **Advanced query operators**: Boolean search (AND, OR, NOT), exact phrases, required/excluded words
+- **Custom date ranges**: Flexible date pickers for precise time-based filtering
+- **All NewsAPI sources**: Access to 80,000+ sources (not limited to predefined list)
+- **Automatic deduplication**: Prevents duplicate articles in database
+- **Batch processing**: Progress tracking with real-time updates
+- **Cloud storage**: Neon PostgreSQL with full metadata preservation
 
 ### **🔍 Semantic Search**
-- Vector similarity search with Pinecone
-- 384-dimensional embeddings
-- Cosine similarity matching
-- Relevance scoring
-- Source filtering
+
+- **Vector similarity search**: Powered by Pinecone for fast, scalable retrieval
+- **384-dimensional embeddings**: Using Sentence Transformers (all-MiniLM-L6-v2)
+- **Cosine similarity matching**: Accurate relevance scoring
+- **Optimized metadata**: Smart content truncation (10KB limit) to stay within Pinecone's 40KB limit
+- **Source filtering**: Search within specific news sources
+- **Adjustable similarity threshold**: Fine-tune result quality
 
 ### **📝 Summarization**
+
 - RAG-enhanced context retrieval
 - GPT-3.5/GPT-4 powered summaries
 - Source attribution
@@ -283,6 +310,7 @@ VECTOR_STORE_TYPE=chromadb
 - Q&A mode for specific questions
 
 ### **✅ Validation**
+
 - ROUGE metrics (ROUGE-1, ROUGE-2, ROUGE-L)
 - BLEU score calculation
 - Gemini-powered fidelity checking
@@ -290,6 +318,7 @@ VECTOR_STORE_TYPE=chromadb
 - Quality scoring
 
 ### **📊 Analytics**
+
 - Real-time database statistics
 - Article trends by source
 - Recent activity tracking
@@ -308,7 +337,12 @@ VECTOR_STORE_TYPE=chromadb
 - [x] **Phase 7**: UI Development (Streamlit) ✅
 - [x] **Phase 8**: Cloud Migration (Neon + Pinecone) ✅
 - [x] **Phase 9**: Performance Optimization ✅
-- [ ] **Phase 10**: Deployment (In Progress)
+- [x] **Phase 9.5**: Advanced Search Features ✅
+  - Boolean query operators
+  - Date range filtering
+  - All NewsAPI sources enabled
+  - Pinecone metadata optimization
+- [x] **Phase 10**: Deployment (Completed)
 
 ## 🧪 Testing
 
@@ -324,6 +358,50 @@ python tests/test_fidelity.py
 # Or run with pytest
 pytest tests/
 ```
+
+## 🔍 Advanced Search Features
+
+### **Query Operators**
+
+The system supports powerful NewsAPI query operators for precise article filtering:
+
+**Basic Search:**
+
+- Simple keywords: `artificial intelligence` (matches articles with any of these words)
+- Single topic: `machine learning`
+
+**Advanced Operators:**
+
+- **Exact phrases**: Use quotes → `"large language models"`
+- **All words required**: Use AND → `AI AND healthcare`
+- **Any word matches**: Use OR → `GPT OR ChatGPT OR OpenAI`
+- **Exclude words**: Use NOT or - → `AI NOT cryptocurrency`
+- **Required word**: Use + → `+ChatGPT applications`
+- **Complex queries**: Combine operators → `(AI OR "artificial intelligence") AND ethics NOT hype`
+
+**Examples:**
+
+```
+"artificial intelligence" AND healthcare
+(GPT-4 OR ChatGPT) AND research
++machine learning computer vision
+crypto AND (ethereum OR bitcoin) NOT scam
+```
+
+### **Date Range Filtering**
+
+When using "Everything (Advanced Search)" mode:
+
+- **From Date**: Oldest article date to search from
+- **To Date**: Newest article date to search to
+- **Default range**: Last 7 days
+- **Validation**: Automatically prevents invalid date ranges
+
+### **Source Selection**
+
+- **Leave blank**: Searches ALL 80,000+ NewsAPI sources
+- **Specify sources**: Comma-separated list (e.g., `bbc-news,cnn,reuters`)
+- **No limitations**: Not constrained to predefined source lists
 
 ## 📝 Usage Examples
 
@@ -372,6 +450,7 @@ for article in articles:
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for detailed deployment instructions.
 
 **Quick Deploy Options:**
+
 - **Streamlit Cloud**: Free hosting for Streamlit apps
 - **Railway**: Easy deployment with PostgreSQL support
 - **Render**: Free tier with automatic deployments
@@ -391,9 +470,33 @@ This is a course project for CS 4200. Contributions and suggestions are welcome!
 
 This project is for educational purposes as part of CS 4200 - Fall 2025.
 
+## 🆕 Recent Updates
+
+### **v1.1.0 - Advanced Search & Optimization** (November 2025)
+
+**New Features:**
+
+- ✨ **Advanced Query Operators**: Full support for NewsAPI boolean search (AND, OR, NOT, quotes, +, -)
+- 📅 **Date Range Filtering**: Custom date pickers for "Everything" search mode
+- 🌐 **All Sources Enabled**: Access to 80,000+ NewsAPI sources (removed source limitations)
+- 💡 **Query Tips UI**: Interactive help section with search examples and best practices
+
+**Bug Fixes:**
+
+- 🐛 **Pinecone Metadata Size**: Fixed 40KB metadata limit error by implementing smart content truncation (10KB limit)
+- 🔧 **Source Parameter**: Fixed undefined `self.sources` attribute error in news fetcher
+- ✅ **Date Validation**: Added validation to prevent invalid date ranges
+
+**Improvements:**
+
+- 📝 **Enhanced Documentation**: Updated README with advanced search examples
+- 🎨 **Better UX**: Improved placeholder text and tooltips in search inputs
+- 🔍 **Metadata Optimization**: Automatic size validation before Pinecone upsert
+
 ## 🔗 Resources
 
 ### **Documentation**
+
 - [Neon PostgreSQL](https://neon.tech/docs)
 - [Pinecone Vector Database](https://docs.pinecone.io)
 - [OpenAI API](https://platform.openai.com/docs)
@@ -402,6 +505,7 @@ This project is for educational purposes as part of CS 4200 - Fall 2025.
 - [Sentence Transformers](https://www.sbert.net)
 
 ### **Tutorials**
+
 - [RAG Implementation Guide](https://python.langchain.com/docs/use_cases/question_answering/)
 - [Vector Database Comparison](https://www.pinecone.io/learn/vector-database/)
 - [Prompt Engineering](https://platform.openai.com/docs/guides/prompt-engineering)
@@ -422,4 +526,4 @@ For questions or issues, please open an issue in the repository.
 ---
 
 **Built with ❤️ for CS 4200 - Fall 2025**  
-*Intelligent news aggregation powered by AI*
+_Intelligent news aggregation powered by AI_
