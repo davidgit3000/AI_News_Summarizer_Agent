@@ -3,7 +3,7 @@ Ingestion tab component for fetching and storing news articles.
 """
 
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from src.ingestion.pipeline import IngestionPipeline
 from src.vectorization.pipeline import VectorizationPipeline
 from src.retrieval.pipeline import RetrievalPipeline
@@ -123,13 +123,15 @@ def render_ingestion_tab():
             help="Choose how far back to search. Free tier allows up to 29 days."
         )
         
-        # Calculate dates based on selection
+        # Calculate dates based on selection (using UTC for consistency across deployments)
         days_back = date_range_options[selected_range]
-        from_date = datetime.now() - timedelta(days=days_back)
-        to_date = datetime.now()
+        now_utc = datetime.now(timezone.utc)
+        from_date = now_utc - timedelta(days=days_back)
+        to_date = now_utc
         
-        # Display the actual date range
-        st.caption(f"📆 Searching from **{from_date.strftime('%Y-%m-%d')}** to **{to_date.strftime('%Y-%m-%d')}**")
+        # Display the actual date range with UTC note
+        st.caption(f"📆 Searching from **{from_date.strftime('%Y-%m-%d %H:%M UTC')}** to **{to_date.strftime('%Y-%m-%d %H:%M UTC')}**")
+        st.caption("⏰ _Note: Dates are in UTC timezone (Streamlit Cloud server time)_")
     
     if st.button("🚀 Fetch Articles", type="primary"):
         # Validate required fields
