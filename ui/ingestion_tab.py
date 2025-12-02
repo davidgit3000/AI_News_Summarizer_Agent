@@ -30,7 +30,8 @@ def render_ingestion_tab():
         - **Complex queries**: Combine operators → `(AI OR "artificial intelligence") AND ethics NOT hype`
         
         **Tips for Better Results:**
-        - 📅 **Date range matters**: Rare topics may need longer timeframes (7-30 days)
+        - 📅 **Date range**: Free tier allows up to 29 days (not 30!). Rare topics may need longer timeframes.
+        - ⏰ **Indexing delay**: Articles have a 24-hour delay before appearing in search results
         - 🔄 **Try variations**: "AI models", "artificial intelligence models", "ML models"
         - 🎯 **Be specific**: Use exact phrases for specific topics
         - 🌐 **Sources**: Leave blank to search ALL sources (80,000+ available)
@@ -101,27 +102,34 @@ def render_ingestion_tab():
     # Date range for Everything mode
     if fetch_mode == "Everything (Advanced Search)":
         st.subheader("📅 Date Range")
-        col_date1, col_date2 = st.columns(2)
         
-        with col_date1:
-            from_date = st.date_input(
-                "From Date",
-                value=datetime.now() - timedelta(days=7),
-                max_value=datetime.now(),
-                help="Oldest article date to search from"
-            )
+        # Free tier information
+        st.info("ℹ️ **NewsAPI Free Tier**: Searches up to 29 days back (not 30). Articles have a 24-hour indexing delay.")
         
-        with col_date2:
-            to_date = st.date_input(
-                "To Date",
-                value=datetime.now(),
-                max_value=datetime.now(),
-                help="Newest article date to search to"
-            )
+        # Date range dropdown options
+        date_range_options = {
+            "Last 24 hours": 1,
+            "Last 3 days": 3,
+            "Last 7 days (1 week)": 7,
+            "Last 14 days (2 weeks)": 14,
+            "Last 21 days (3 weeks)": 21,
+            "Last 29 days (Maximum - Free Tier)": 29
+        }
         
-        # Validate date range
-        if from_date > to_date:
-            st.error("⚠️ 'From Date' must be before 'To Date'")
+        selected_range = st.selectbox(
+            "Select Date Range",
+            options=list(date_range_options.keys()),
+            index=2,  # Default to "Last 7 days"
+            help="Choose how far back to search. Free tier allows up to 29 days."
+        )
+        
+        # Calculate dates based on selection
+        days_back = date_range_options[selected_range]
+        from_date = datetime.now() - timedelta(days=days_back)
+        to_date = datetime.now()
+        
+        # Display the actual date range
+        st.caption(f"📆 Searching from **{from_date.strftime('%Y-%m-%d')}** to **{to_date.strftime('%Y-%m-%d')}**")
     
     if st.button("🚀 Fetch Articles", type="primary"):
         # Validate required fields
@@ -155,14 +163,11 @@ def render_ingestion_tab():
                                 max_results=page_size
                             )
                         else:  # Everything
-                            # Convert date objects to datetime objects
-                            from_datetime = datetime.combine(from_date, datetime.min.time())
-                            to_datetime = datetime.combine(to_date, datetime.max.time())
-                            
+                            # from_date and to_date are already datetime objects from the dropdown
                             stats = st.session_state.ingestion_pipeline.ingest_everything(
                                 query=query,
-                                from_date=from_datetime,
-                                to_date=to_datetime,
+                                from_date=from_date,
+                                to_date=to_date,
                                 sources=sources if sources else None,
                                 sort_by=sort_by,
                                 page_size=page_size
