@@ -20,20 +20,20 @@ An end-to-end AI system that:
 - ✅ **Presents** insights via beautiful Streamlit UI
 
 ## Demo Screenshots
-1) Overview of the Home page
-<img width="3024" height="1618" alt="image" src="https://github.com/user-attachments/assets/04c23df2-4764-47d3-862b-9f2a40fde6e2" />
+1) Overview of Home page at first start
+<img width="3022" height="1640" alt="image" src="https://github.com/user-attachments/assets/8fc08e1b-f058-41ea-9c45-d800c21d4915" />
 
-2) Fetch news about the topic "artificial intelligence" or AI
-<img width="2296" height="1518" alt="image" src="https://github.com/user-attachments/assets/404c5cac-cd3b-46d0-aa51-467dada483d9" />
+2) Enter a prompt, like “Tell me about virtual reality” and the model will generate a summary with the statistics displayed (the number of articles used, the number of new articles fetched from NewsAPI, and status (Cached or Fresh)). It is cached because the topic was searched before.
+<img width="2192" height="1024" alt="image" src="https://github.com/user-attachments/assets/78c72531-4f8f-4003-aba4-e9f0b3993eb7" />
 
-3) Search and summarize all articles about the topic "superintelligent AI"
-<img width="2280" height="1330" alt="image" src="https://github.com/user-attachments/assets/98bffc7c-e68d-4f92-95eb-86b0f15fab99" />
+3) We can see sources used for summary using RAG (Retrieve-Augmented Generation)
+<img width="2192" height="1342" alt="image" src="https://github.com/user-attachments/assets/89ab6f6a-63be-49d6-9258-e2abb76080d7" />
+<img width="1902" height="1100" alt="image" src="https://github.com/user-attachments/assets/2b5a1d94-0cc5-4ea9-b2ab-d65d947643ae" />
+<img width="1902" height="1342" alt="image" src="https://github.com/user-attachments/assets/4d128c08-b47c-429b-bddf-f3e4625777bc" />
 
-4) Summarization result with sources below
-<img width="2280" height="1508" alt="image" src="https://github.com/user-attachments/assets/35a6b7e5-bb0b-482c-b326-d7dd97e722d0" />
-
-5) Summary Validation and Fidelity Analysis (done by Google's Gemini)
-<img width="2352" height="1514" alt="image" src="https://github.com/user-attachments/assets/550a463a-b065-4242-94dd-8f751a76bc40" />
+4) After the response, we should see the quality metrics along with fidelity analysis
+<img width="1902" height="1096" alt="image" src="https://github.com/user-attachments/assets/559d3542-2668-4ef3-aa20-e00e41b96fba" />
+<img width="1996" height="698" alt="image" src="https://github.com/user-attachments/assets/1979b0cd-af01-44fa-a022-ab9077250af3" />
 
 ## 🏗️ Architecture
 
