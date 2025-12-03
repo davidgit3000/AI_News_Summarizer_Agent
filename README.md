@@ -20,20 +20,21 @@ An end-to-end AI system that:
 - ✅ **Presents** insights via beautiful Streamlit UI
 
 ## Demo Screenshots
-1) Overview of Home page at first start
-<img width="3022" height="1640" alt="image" src="https://github.com/user-attachments/assets/8fc08e1b-f058-41ea-9c45-d800c21d4915" />
 
-2) Enter a prompt, like “Tell me about virtual reality” and the model will generate a summary with the statistics displayed (the number of articles used, the number of new articles fetched from NewsAPI, and status (Cached or Fresh)). It is cached because the topic was searched before.
-<img width="2192" height="1024" alt="image" src="https://github.com/user-attachments/assets/78c72531-4f8f-4003-aba4-e9f0b3993eb7" />
+1. Overview of Home page at first start
+   <img width="3022" height="1640" alt="image" src="https://github.com/user-attachments/assets/8fc08e1b-f058-41ea-9c45-d800c21d4915" />
 
-3) We can see sources used for summary using RAG (Retrieve-Augmented Generation)
-<img width="2192" height="1342" alt="image" src="https://github.com/user-attachments/assets/89ab6f6a-63be-49d6-9258-e2abb76080d7" />
-<img width="1902" height="1100" alt="image" src="https://github.com/user-attachments/assets/2b5a1d94-0cc5-4ea9-b2ab-d65d947643ae" />
-<img width="1902" height="1342" alt="image" src="https://github.com/user-attachments/assets/4d128c08-b47c-429b-bddf-f3e4625777bc" />
+2. Enter a prompt, like “Tell me about virtual reality” and the model will generate a summary with the statistics displayed (the number of articles used, the number of new articles fetched from NewsAPI, and status (Cached or Fresh)). It is cached because the topic was searched before.
+   <img width="2192" height="1024" alt="image" src="https://github.com/user-attachments/assets/78c72531-4f8f-4003-aba4-e9f0b3993eb7" />
 
-4) After the response, we should see the quality metrics along with fidelity analysis
-<img width="1902" height="1096" alt="image" src="https://github.com/user-attachments/assets/559d3542-2668-4ef3-aa20-e00e41b96fba" />
-<img width="1996" height="698" alt="image" src="https://github.com/user-attachments/assets/1979b0cd-af01-44fa-a022-ab9077250af3" />
+3. We can see sources used for summary using RAG (Retrieve-Augmented Generation)
+   <img width="2192" height="1342" alt="image" src="https://github.com/user-attachments/assets/89ab6f6a-63be-49d6-9258-e2abb76080d7" />
+   <img width="1902" height="1100" alt="image" src="https://github.com/user-attachments/assets/2b5a1d94-0cc5-4ea9-b2ab-d65d947643ae" />
+   <img width="1902" height="1342" alt="image" src="https://github.com/user-attachments/assets/4d128c08-b47c-429b-bddf-f3e4625777bc" />
+
+4. After the response, we should see the quality metrics along with fidelity analysis
+   <img width="1902" height="1096" alt="image" src="https://github.com/user-attachments/assets/559d3542-2668-4ef3-aa20-e00e41b96fba" />
+   <img width="1996" height="698" alt="image" src="https://github.com/user-attachments/assets/1979b0cd-af01-44fa-a022-ab9077250af3" />
 
 ## 🏗️ Architecture
 
@@ -205,18 +206,21 @@ The app will open at `http://localhost:8501` 🎉
 
 ### **6. First Steps in the UI**
 
-1. **Ingest Tab**:
-   - Choose fetch mode (Top Headlines, By Topic, or Everything)
-   - Use advanced query operators for precise searches:
-     - Exact phrases: `"artificial intelligence"`
-     - Boolean operators: `AI AND healthcare`, `(GPT OR ChatGPT) NOT hype`
-     - Required/excluded words: `+machine learning`, `AI -cryptocurrency`
-   - Set custom date ranges (Everything mode)
-   - Click "Fetch Articles" to load news
-2. **Summarize Tab**: Enter a topic (e.g., "AI") and generate summary
-3. **Search Tab**: Search articles semantically
-4. **Analytics Tab**: View insights and trends
-5. **Validate Tab**: Check summary quality
+1. **Start Chatting**:
+   - Type your question naturally (e.g., "Tell me about virtual reality")
+   - The AI will fetch relevant articles and generate a summary
+   - View sources with relevance percentages in expandable cards
+   - See automatic quality metrics after each response
+2. **Configure Settings** (Sidebar):
+   - **Summary Length**: Adjust word count (50-500 words)
+   - **Summary Style**: Choose between concise, detailed, or bullet points
+   - **Fidelity Check**: Toggle LLM-based hallucination detection
+3. **View Results**:
+   - **Summary**: AI-generated news summary with proper formatting
+   - **Sources**: Expandable list with titles, dates, and relevance scores
+   - **Metadata**: Articles used, newly fetched count, cache status
+   - **Quality Metrics**: Automatic validation with detailed scores
+   - **Fidelity Analysis**: Optional LLM-based fact-checking (if enabled)
 
 ## 📁 Project Structure
 
@@ -245,6 +249,9 @@ AI_News_Summarizer_Agent/
 │       ├── db_factory.py       # Database factory pattern
 │       └── db_manager.py       # Legacy SQLite (deprecated)
 ├── ui/                         # Streamlit UI components
+│   ├── chat_interface.py       # Main chat interface (conversational UI)
+│   ├── components/             # Reusable UI components
+│   │   └── validation_display.py  # Validation results renderer
 │   ├── ingestion_tab.py        # Article ingestion interface
 │   ├── search_tab.py           # Semantic search interface
 │   ├── summarize_tab.py        # Summarization interface
@@ -298,7 +305,16 @@ VECTOR_STORE_TYPE=chromadb
 
 ## ✨ Features
 
-### **📥 Ingestion**
+### **� Chat Interface**
+
+- **Conversational UI**: Natural chat-based interaction with the AI assistant
+- **Persistent History**: Chat messages saved across sessions
+- **Real-time Responses**: Streaming text generation with live updates
+- **Automatic Validation**: Quality metrics displayed after each summary
+- **Source Attribution**: Expandable source cards with relevance percentages
+- **Configurable Fidelity**: Toggle LLM-based fidelity checking via sidebar
+
+### **�� Ingestion**
 
 - **Multi-mode fetching**: Top Headlines, By Topic, or Everything (Advanced Search)
 - **Advanced query operators**: Boolean search (AND, OR, NOT), exact phrases, required/excluded words
@@ -312,26 +328,30 @@ VECTOR_STORE_TYPE=chromadb
 
 - **Vector similarity search**: Powered by Pinecone for fast, scalable retrieval
 - **384-dimensional embeddings**: Using Sentence Transformers (all-MiniLM-L6-v2)
-- **Cosine similarity matching**: Accurate relevance scoring
+- **Cosine similarity matching**: Accurate relevance scoring (min 0.30 threshold)
 - **Optimized metadata**: Smart content truncation (10KB limit) to stay within Pinecone's 40KB limit
 - **Source filtering**: Search within specific news sources
 - **Adjustable similarity threshold**: Fine-tune result quality
 
 ### **📝 Summarization**
 
-- RAG-enhanced context retrieval
-- GPT-3.5/GPT-4 powered summaries
-- Source attribution
-- Customizable length and style
-- Q&A mode for specific questions
+- **RAG-enhanced retrieval**: Context-aware article selection
+- **GPT-3.5/GPT-4 powered**: Advanced language model summaries
+- **Source attribution**: Full citation with relevance scores
+- **Customizable output**: Adjustable length and style
+- **Q&A mode**: Answer specific questions about topics
 
 ### **✅ Validation**
 
-- ROUGE metrics (ROUGE-1, ROUGE-2, ROUGE-L)
-- BLEU score calculation
-- Gemini-powered fidelity checking
-- Hallucination detection
-- Quality scoring
+- **Comprehensive Metrics**:
+  - **Readability**: Flesch Reading Ease score
+  - **Lexical Diversity**: Unique word ratio (60-80% ideal)
+  - **Information Density**: Key term preservation (30-60% ideal)
+  - **Coherence**: Word overlap + discourse connectives (>30% ideal)
+  - **Compression Ratio**: Summary vs original length (20-40% ideal)
+- **Gemini Fidelity Checking**: LLM-based hallucination detection
+- **Quality Scoring**: Overall summary quality rating
+- **Actionable Recommendations**: Specific improvement suggestions
 
 ### **📊 Analytics**
 
@@ -487,6 +507,37 @@ This is a course project for CS 4200. Contributions and suggestions are welcome!
 This project is for educational purposes as part of CS 4200 - Fall 2025.
 
 ## 🆕 Recent Updates
+
+### **v1.2.0 - Chat Interface & Enhanced Validation** (December 2025)
+
+**Major Features:**
+
+- 💬 **Chat Interface**: New conversational UI with persistent chat history
+  - Real-time streaming responses
+  - Message persistence across sessions
+  - Clean, modern chat bubbles with user/assistant distinction
+- 🎯 **Automatic Validation**: Quality metrics displayed automatically after each summary
+  - No manual button clicking required
+  - Configurable fidelity checking via sidebar toggle
+  - Validation results persist in chat history
+- 📊 **Enhanced Quality Metrics**:
+  - **Improved Coherence Score**: Combines word overlap (70%) + discourse connectives (30%)
+  - **Source Relevance Display**: Shows similarity percentage for each source article
+  - **Comprehensive Metrics**: Readability, lexical diversity, information density, compression ratio
+
+**Bug Fixes:**
+
+- 🐛 **Duplicate Detection**: Fixed hyphen-related title normalization issues
+- 🔧 **Validation Metrics**: Fixed 0% compression and information density by using full article content
+- ✅ **Coherence Calculation**: Replaced simple connective counting with semantic similarity
+- 🎨 **Text Formatting**: Fixed monospace display issue in deployed vs local versions
+
+**Improvements:**
+
+- 📈 **Higher Relevance Threshold**: Increased minimum similarity from 0.25 to 0.30 for better article quality
+- 🔄 **Articles vs Sources**: Properly distinguish between metadata (sources) and full content (articles)
+- 🎨 **UI Consistency**: Unified text rendering using `st.write()` for proper formatting
+- 📝 **Better Topic Extraction**: Added "tell me something new about" pattern recognition
 
 ### **v1.1.0 - Advanced Search & Optimization** (November 2025)
 
