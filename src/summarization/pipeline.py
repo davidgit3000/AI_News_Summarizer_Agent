@@ -90,6 +90,17 @@ class SummarizationPipeline:
             max_tokens=summary_length * 2
         )
         
+        # Log original summary for debugging
+        logger.info(f"Original LLM output: {summary}")
+        
+        # Clean up summary text (fix spacing issues from LLM)
+        cleaned_summary = self._clean_summary_text(summary)
+        
+        # Log cleaned summary for comparison
+        logger.info(f"Cleaned summary: {cleaned_summary}")
+        
+        summary = cleaned_summary
+        
         # Step 4: Format result
         result = {
             'topic': topic,
@@ -337,6 +348,45 @@ Headline:"""
             'article_count': context_data['article_count'],
             'timestamp': datetime.now().isoformat()
         }
+    
+    def _clean_summary_text(self, text: str) -> str:
+        """
+        Clean up summary text to fix common LLM output issues.
+        
+        Fixes:
+        - Missing spaces between sentences
+        - Multiple consecutive spaces
+        - Concatenated words (e.g., "$299forCyber" -> "$299 for Cyber")
+        
+        Args:
+            text: Raw summary text from LLM
+        
+        Returns:
+            Cleaned text
+        """
+        import re
+        
+        if not text:
+            return text
+        
+        # Fix multiple spaces
+        text = re.sub(r' {2,}', ' ', text)
+        
+        # Fix missing space after punctuation followed by letter
+        text = re.sub(r'([.!?,;:])([A-Za-z])', r'\1 \2', text)
+        
+        # Fix missing space after numbers/currency followed by lowercase letters
+        # e.g., "$299for" -> "$299 for"
+        text = re.sub(r'(\d)([a-z])', r'\1 \2', text)
+        
+        # Fix lowercase letter followed immediately by uppercase (camelCase)
+        # e.g., "forCyber" -> "for Cyber"
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Fix comma followed immediately by letter (no space)
+        text = re.sub(r',([A-Za-z])', r', \1', text)
+        
+        return text.strip()
     
     def _build_summarization_prompt(
         self,

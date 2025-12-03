@@ -143,9 +143,6 @@ class RetrievalPipeline:
                 # Check if using Pinecone or ChromaDB
                 if hasattr(self.vector_store, 'index'):  # Pinecone
                     # For Pinecone, we need articles with embeddings
-                    from src.vectorization.embedder import TextEmbedder
-                    embedder = TextEmbedder()
-                    
                     # Get article objects with embeddings
                     batch_articles = []
                     batch_embeddings = []
@@ -215,18 +212,25 @@ class RetrievalPipeline:
                 where=where
             )
         
+        # Debug: Log raw results structure
+        if results:
+            logger.info(f"Raw results count: {len(results)}, first result keys: {list(results[0].keys()) if results else 'N/A'}")
+        
         # Filter by minimum similarity
-        filtered_results = [
-            r for r in results
-            if r['similarity'] >= min_similarity
-        ]
+        filtered_results = []
+        for r in results:
+            if 'similarity' not in r:
+                logger.warning(f"Result missing 'similarity' key: {r.keys()}")
+                continue
+            if r['similarity'] >= min_similarity:
+                filtered_results.append(r)
         
         # Log IDs for debugging
         if filtered_results:
             ids = [r['id'] for r in filtered_results[:5]]  # First 5 IDs
             logger.info(f"Retrieved {len(filtered_results)} articles for query: '{query[:50]}...', sample IDs: {ids}")
         else:
-            logger.info(f"Retrieved 0 articles for query: '{query[:50]}...'")
+            logger.info(f"Retrieved 0 articles for query: '{query[:50]}...' (had {len(results)} raw results)")
         
         return filtered_results
     
@@ -248,8 +252,9 @@ class RetrievalPipeline:
             Dictionary with formatted context and metadata
         """
         # Retrieve relevant articles with minimum similarity threshold
-        # Use lower threshold for broad queries, higher for specific ones
-        min_sim = 0.2 if len(topic.split()) <= 1 else 0.35
+        # Use higher threshold to ensure only highly relevant articles
+        # Pinecone cosine similarity: 0.25+ = good match, 0.30+ = strong match
+        min_sim = 0.30  # Higher threshold for better relevance
         articles = self.retrieve_for_query(
             query=topic,
             top_k=max_articles,

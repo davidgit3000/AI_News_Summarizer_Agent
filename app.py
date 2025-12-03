@@ -1,6 +1,11 @@
 """
-AI News Summarizer - Streamlit Web Application (Modular Version)
-Main entry point for the web interface with modularized UI components.
+AI News Summarizer - Streamlit Web Application (Chat Interface)
+Main entry point for the web interface with AI agent orchestration.
+
+This version uses a ChatGPT-style interface where users can ask questions
+and the agent automatically handles fetching, searching, and summarizing.
+
+For the legacy tab-based interface, see app_legacy.py
 """
 
 import streamlit as st
@@ -14,18 +19,13 @@ load_dotenv()
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from ui import (
-    render_sidebar,
-    render_ingestion_tab,
-    render_summarization_tab,
-    render_analytics_tab,
-    render_search_tab
-)
+from ui.chat_interface import render_chat_interface, render_welcome_message
+from ui import render_sidebar
 
 # Page configuration
 st.set_page_config(
-    page_title="AI News Summarizer",
-    page_icon="📰",
+    page_title="AI News Assistant",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -76,20 +76,11 @@ st.markdown("""
 
 def init_session_state():
     """Initialize session state variables."""
-    if 'ingestion_pipeline' not in st.session_state:
-        st.session_state.ingestion_pipeline = None
-    if 'summarization_pipeline' not in st.session_state:
-        st.session_state.summarization_pipeline = None
-    if 'validation_pipeline' not in st.session_state:
-        st.session_state.validation_pipeline = None
-    if 'vectorization_pipeline' not in st.session_state:
-        st.session_state.vectorization_pipeline = None
-    if 'retrieval_pipeline' not in st.session_state:
-        st.session_state.retrieval_pipeline = None
-    if 'last_summary' not in st.session_state:
-        st.session_state.last_summary = None
-    if 'last_ingestion_stats' not in st.session_state:
-        st.session_state.last_ingestion_stats = None
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+    if 'orchestrator' not in st.session_state:
+        from src.agent.orchestrator import NewsAgentOrchestrator
+        st.session_state.orchestrator = NewsAgentOrchestrator()
 
 
 def main():
@@ -97,33 +88,14 @@ def main():
     # Initialize session state
     init_session_state()
     
-    # Render sidebar
+    # Render sidebar (for system info, etc.)
     render_sidebar()
     
-    # Main header
-    st.markdown('<h1 class="main-header">📰 AI News Summarizer</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Intelligent news aggregation and summarization powered by RAG and LLMs</p>', unsafe_allow_html=True)
+    # Show welcome message if chat is empty
+    render_welcome_message()
     
-    # Create tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📥 Ingest",
-        "🔍 Search",
-        "📝 Summarize and Validate",
-        "📊 Stats"
-    ])
-    
-    # Render each tab
-    with tab1:
-        render_ingestion_tab()
-    
-    with tab2:
-        render_search_tab()
-    
-    with tab3:
-        render_summarization_tab()
-    
-    with tab4:
-        render_analytics_tab()
+    # Render main chat interface
+    render_chat_interface()
 
 
 if __name__ == "__main__":

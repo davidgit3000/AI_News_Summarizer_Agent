@@ -208,7 +208,7 @@ class SummaryMetrics:
     
     def calculate_coherence_score(self, text: str) -> float:
         """
-        Calculate coherence score (simple heuristic based on connectives).
+        Calculate coherence score using both word overlap and discourse connectives.
         
         Args:
             text: Text to analyze
@@ -216,25 +216,55 @@ class SummaryMetrics:
         Returns:
             Coherence score (0-1)
         """
-        # Common discourse connectives
+        sentences = self._split_sentences(text)
+        num_sentences = len(sentences)
+        
+        if num_sentences <= 1:
+            return 1.0  # Single sentence is perfectly coherent
+        
+        # Part 1: Calculate word overlap between consecutive sentences
+        overlap_scores = []
+        for i in range(len(sentences) - 1):
+            sent1_words = set(sentences[i].lower().split())
+            sent2_words = set(sentences[i + 1].lower().split())
+            
+            # Remove common stop words for better signal
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were'}
+            sent1_words = sent1_words - stop_words
+            sent2_words = sent2_words - stop_words
+            
+            if not sent1_words or not sent2_words:
+                continue
+            
+            # Calculate Jaccard similarity
+            intersection = len(sent1_words & sent2_words)
+            union = len(sent1_words | sent2_words)
+            
+            if union > 0:
+                overlap_scores.append(intersection / union)
+        
+        # Average overlap score
+        overlap_score = sum(overlap_scores) / len(overlap_scores) if overlap_scores else 0.0
+        
+        # Part 2: Check for discourse connectives
         connectives = [
             'however', 'therefore', 'moreover', 'furthermore', 'additionally',
             'consequently', 'meanwhile', 'nevertheless', 'thus', 'hence',
-            'also', 'besides', 'indeed', 'in addition', 'for example'
+            'also', 'besides', 'indeed', 'in addition', 'for example',
+            'similarly', 'likewise', 'in contrast', 'on the other hand',
+            'as a result', 'in fact', 'specifically', 'particularly'
         ]
         
         text_lower = text.lower()
         connective_count = sum(1 for conn in connectives if conn in text_lower)
         
-        sentences = self._split_sentences(text)
-        num_sentences = len(sentences)
+        # Normalize connective score (1 connective per 2 sentences is good)
+        connective_score = min(1.0, connective_count / max(1, (num_sentences / 2)))
         
-        if num_sentences <= 1:
-            return 1.0
+        # Combine both scores (70% overlap, 30% connectives)
+        final_score = (0.7 * overlap_score) + (0.3 * connective_score)
         
-        # Normalize by number of sentences
-        score = min(1.0, connective_count / (num_sentences - 1))
-        return score
+        return final_score
     
     def calculate_all_metrics(
         self,

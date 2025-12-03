@@ -189,7 +189,7 @@ class PineconeStore:
         if matches:
             sample_scores = [f"{m['id']}:{m['similarity']:.3f}" for m in matches[:3]]
             logger.info(f"Found {len(matches)} matches (min_similarity={min_similarity}), sample scores: {sample_scores}")
-            logger.info(f"Sample match: {matches[0]}")  # Log the first match object
+            # logger.info(f"Sample match: {matches[0]}")  # Log the first match object
         else:
             logger.info(f"Found 0 matches (min_similarity={min_similarity})")
         
