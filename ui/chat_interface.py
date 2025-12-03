@@ -137,8 +137,8 @@ def render_chat_interface():
     # Display chat history
     for idx, message in enumerate(st.session_state.messages):
         with st.chat_message(message['role']):
-            # Display as plain text to avoid markdown formatting issues
-            st.text(message['content'])
+            # Display message content with proper formatting
+            st.write(message['content'])
             
             # Display sources if available
             if message.get('sources'):
@@ -223,8 +223,8 @@ def render_chat_interface():
                         sources = []
                         metadata = None
                     else:
-                        # Display summary as plain text (no markdown formatting)
-                        st.text(result['summary'])
+                        # Display summary with proper formatting
+                        st.write(result['summary'])
                         response_content = result['summary']  # Store original for history
                         sources = result.get('sources', [])
                         articles = result.get('articles', [])  # Get full articles for validation
