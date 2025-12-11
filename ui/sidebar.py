@@ -65,59 +65,59 @@ def render_sidebar():
     if not all(keys_status.values()):
         st.sidebar.warning("⚠️ Some API keys are missing. Check your .env file.")
     
-    st.sidebar.markdown("---")
+    # st.sidebar.markdown("---")
     
-    # Settings
-    st.sidebar.subheader("Settings")
+    # # Settings
+    # st.sidebar.subheader("Settings")
     
-    settings = get_settings()
+    # settings = get_settings()
     
-    # LLM Settings
-    with st.sidebar.expander("🤖 LLM Settings"):
-        # Model selection
-        model_options = ["gpt-3.5-turbo", "gpt-4.1", "gpt-4.1-mini"]
-        current_model = settings.llm_model if settings.llm_model in model_options else "gpt-3.5-turbo"
+    # # LLM Settings
+    # with st.sidebar.expander("🤖 LLM Settings"):
+    #     # Model selection
+    #     model_options = ["gpt-3.5-turbo", "gpt-4.1", "gpt-4.1-mini"]
+    #     current_model = settings.llm_model if settings.llm_model in model_options else "gpt-3.5-turbo"
         
-        selected_model = st.selectbox(
-            "Model",
-            options=model_options,
-            index=model_options.index(current_model),
-            help="Select the OpenAI model to use. GPT-4.1 models are newer and more capable but more expensive."
-        )
+    #     selected_model = st.selectbox(
+    #         "Model",
+    #         options=model_options,
+    #         index=model_options.index(current_model),
+    #         help="Select the OpenAI model to use. GPT-4.1 models are newer and more capable but more expensive."
+    #     )
         
-        # Store in session state for use across the app
-        st.session_state.llm_model = selected_model
+    #     # Store in session state for use across the app
+    #     st.session_state.llm_model = selected_model
         
-        st.write(f"**Temperature:** {settings.llm_temperature}")
-        st.write(f"**Max Tokens:** {settings.llm_max_tokens}")
+    #     st.write(f"**Temperature:** {settings.llm_temperature}")
+    #     st.write(f"**Max Tokens:** {settings.llm_max_tokens}")
     
-    # Retrieval Settings
-    with st.sidebar.expander("🔍 Retrieval Settings", expanded=True):
-        top_k = st.slider(
-            "Top K Results",
-            min_value=1,
-            max_value=20,
-            value=settings.top_k_results,
-            help="Maximum number of articles to retrieve"
-        )
+    # # Retrieval Settings
+    # with st.sidebar.expander("🔍 Retrieval Settings", expanded=True):
+    #     top_k = st.slider(
+    #         "Top K Results",
+    #         min_value=1,
+    #         max_value=20,
+    #         value=settings.top_k_results,
+    #         help="Maximum number of articles to retrieve"
+    #     )
         
-        similarity = st.slider(
-            "Similarity Threshold",
-            min_value=0.0,
-            max_value=1.0,
-            value=settings.similarity_threshold,
-            step=0.05,
-            help="Minimum similarity score (0-1) for relevance"
-        )
+    #     similarity = st.slider(
+    #         "Similarity Threshold",
+    #         min_value=0.0,
+    #         max_value=1.0,
+    #         value=settings.similarity_threshold,
+    #         step=0.05,
+    #         help="Minimum similarity score (0-1) for relevance"
+    #     )
         
-        # Store in session state for use across tabs
-        st.session_state.top_k_results = top_k
-        st.session_state.similarity_threshold = similarity
+    #     # Store in session state for use across tabs
+    #     st.session_state.top_k_results = top_k
+    #     st.session_state.similarity_threshold = similarity
     
-    # Vector Store Settings
-    with st.sidebar.expander("💾 Vector Store"):
-        st.write(f"**Type:** {settings.vector_store_type}")
-        # st.write(f"**Path:** {settings.vector_store_path}")
+    # # Vector Store Settings
+    # with st.sidebar.expander("💾 Vector Store"):
+    #     st.write(f"**Type:** {settings.vector_store_type}")
+    #     # st.write(f"**Path:** {settings.vector_store_path}")
     
     st.sidebar.markdown("---")
     
